@@ -1,0 +1,411 @@
+openapi: 3.0.3
+info:
+  title: Playwright HTTP Wrapper API
+  version: 1.0.0
+  description: |
+    HTTP API that wraps Playwright (via Patchright) functionality for browser automation.
+    Users create sessions with TTL and execute Playwright commands via HTTP requests.
+  contact:
+    name: Playwright Server
+    url: https://github.com/playwright-server
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: Sessions
+    description: Session lifecycle management
+  - name: Commands
+    description: Execute Playwright commands on sessions
+  - name: Recordings
+    description: Access session recordings
+
+paths:
+  /sessions:
+    post:
+      tags:
+        - Sessions
+      summary: Create a new browser automation session
+      description: |
+        Creates a new session with a unique ID, session URL, stop URL, and optional recording.
+        Returns URLs to control the session and optionally play back recordings.
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ttl:
+                  type: integer
+                  description: Time-to-live in milliseconds
+                  minimum: 60000
+                  maximum: 14400000
+                  default: 1800000
+                  example: 1800000
+                recording:
+                  type: boolean
+                  description: Enable video recording of the session
+                  default: false
+                  example: true
+                videoSize:
+                  type: object
+                  description: Video dimensions (only used if recording is enabled)
+                  properties:
+                    width:
+                      type: integer
+                      example: 1280
+                    height:
+                      type: integer
+                      example: 720
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionCreatedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          description: Maximum concurrent sessions reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "MaxSessionsReached"
+                message: "Maximum concurrent sessions limit reached (10). Please try again later."
+
+  /sessions/{sessionId}:
+    delete:
+      tags:
+        - Sessions
+      summary: Terminate a session (stop URL)
+      description: |
+        Manually terminates a session, closes the browser context, and cleans up resources.
+        If recording was enabled, finalizes the video file.
+      operationId: terminateSession
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Session terminated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Session terminated successfully"
+        '404':
+          $ref: '#/components/responses/SessionNotFound'
+
+  /sessions/{sessionId}/command:
+    post:
+      tags:
+        - Commands
+      summary: Execute a Playwright command on a session
+      description: |
+        Executes a Playwright/Patchright command on the specified session's browser context.
+        Commands are executed synchronously. Resets the session's TTL on successful execution.
+      operationId: executeCommand
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              navigate:
+                summary: Navigate to URL
+                value:
+                  command: "navigate"
+                  options:
+                    url: "https://example.com"
+                    waitUntil: "networkidle"
+              click:
+                summary: Click element
+                value:
+                  command: "click"
+                  selector: "#submit-button"
+                  options:
+                    button: "left"
+              type:
+                summary: Type text
+                value:
+                  command: "type"
+                  selector: "#username"
+                  options:
+                    text: "testuser"
+              textContent:
+                summary: Extract text content
+                value:
+                  command: "textContent"
+                  selector: "h1"
+              screenshot:
+                summary: Take screenshot
+                value:
+                  command: "screenshot"
+                  options:
+                    fullPage: true
+      responses:
+        '200':
+          description: Command executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResponse'
+              examples:
+                textContent:
+                  summary: Text extraction result
+                  value:
+                    result: "Welcome to Example Domain"
+                    executedAt: "2025-11-19T10:30:45.123Z"
+                click:
+                  summary: Click action result
+                  value:
+                    result: null
+                    executedAt: "2025-11-19T10:30:45.123Z"
+                screenshot:
+                  summary: Screenshot result
+                  value:
+                    result: "iVBORw0KGgoAAAANSUhEUg... (base64 encoded image data)"
+                    executedAt: "2025-11-19T10:30:45.123Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/SessionNotFoundOrElementNotFound'
+        '408':
+          description: Command execution timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "TimeoutError"
+                message: "Command execution exceeded timeout (30000ms)"
+        '500':
+          description: Command execution failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "ExecutionError"
+                message: "Browser context closed unexpectedly"
+
+  /recordings/{sessionId}/video.webm:
+    get:
+      tags:
+        - Recordings
+      summary: Access session recording (playback URL)
+      description: |
+        Retrieves the video recording for a completed session.
+        Available for 1 hour after session termination.
+      operationId: getRecording
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Session ID
+      responses:
+        '200':
+          description: Recording file
+          content:
+            video/webm:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Length:
+              schema:
+                type: integer
+              description: File size in bytes
+            Accept-Ranges:
+              schema:
+                type: string
+                example: bytes
+              description: Server supports range requests for video seeking
+        '404':
+          description: Recording not found (session doesn't exist, recording not enabled, or retention period expired)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "RecordingNotFound"
+                message: "Recording not found for session or retention period expired"
+
+components:
+  parameters:
+    sessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Unique session identifier
+
+  schemas:
+    SessionCreatedResponse:
+      type: object
+      required:
+        - sessionId
+        - sessionUrl
+        - stopUrl
+        - expiresAt
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        sessionUrl:
+          type: string
+          format: uri
+          description: URL to execute commands on this session
+          example: "http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/command"
+        stopUrl:
+          type: string
+          format: uri
+          description: URL to terminate this session
+          example: "http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        playbackUrl:
+          type: string
+          format: uri
+          description: URL to access the recording (only present if recording enabled)
+          example: "http://localhost:3000/recordings/a1b2c3d4-e5f6-7890-abcd-ef1234567890/video.webm"
+        expiresAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when session will expire
+          example: "2025-11-19T11:00:00.000Z"
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when session was created
+          example: "2025-11-19T10:30:00.000Z"
+
+    CommandRequest:
+      type: object
+      required:
+        - command
+      properties:
+        command:
+          type: string
+          description: Playwright method name
+          enum:
+            - navigate
+            - goto
+            - click
+            - type
+            - fill
+            - press
+            - textContent
+            - getAttribute
+            - screenshot
+            - waitForSelector
+            - evaluate
+          example: "click"
+        selector:
+          type: string
+          description: CSS or XPath selector (required for element-targeting commands)
+          example: "#submit-button"
+        options:
+          type: object
+          description: Additional parameters for the command (structure depends on command type)
+          additionalProperties: true
+          example:
+            button: "left"
+            clickCount: 1
+
+    CommandResponse:
+      type: object
+      required:
+        - result
+        - executedAt
+      properties:
+        result:
+          description: Return value from command execution (type depends on command)
+          example: "Welcome to Example Domain"
+        executedAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when command was executed
+          example: "2025-11-19T10:30:45.123Z"
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type/code
+          enum:
+            - SessionNotFoundError
+            - CommandNotFoundError
+            - ValidationError
+            - TimeoutError
+            - ElementNotFoundError
+            - ExecutionError
+            - MaxSessionsReached
+            - RecordingNotFound
+          example: "SessionNotFoundError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Session not found or has expired"
+        details:
+          type: object
+          description: Additional error context (optional)
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "ValidationError"
+            message: "Invalid TTL value: must be between 60000 and 14400000 milliseconds"
+
+    SessionNotFound:
+      description: Session not found or has expired
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "SessionNotFoundError"
+            message: "Session not found or has expired"
+
+    SessionNotFoundOrElementNotFound:
+      description: Session not found, expired, or element not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            sessionNotFound:
+              summary: Session not found
+              value:
+                error: "SessionNotFoundError"
+                message: "Session not found or has expired"
+            elementNotFound:
+              summary: Element not found
+              value:
+                error: "ElementNotFoundError"
+                message: "Element matching selector '#missing-button' not found"
