@@ -34,12 +34,12 @@ This document breaks down the implementation into executable tasks organized by 
 
 **Tasks**:
 
-- [ ] T001 Initialize Node.js project with package.json in repository root
-- [ ] T002 [P] Install dependencies: patchright, express, and uuid packages via npm
-- [ ] T003 [P] Install TypeScript and dev dependencies: @types/node, @types/express, typescript, ts-node
-- [ ] T004 [P] Create tsconfig.json with strict mode enabled in repository root
-- [ ] T005 [P] Create .gitignore file (node_modules, dist, recordings, .env) in repository root
-- [ ] T006 [P] Create .env.example with MAX_CONCURRENT_SESSIONS=10, PORT=3000 in repository root
+- [X] T001 Initialize Node.js project with package.json in repository root
+- [X] T002 [P] Install dependencies: patchright, express, and uuid packages via npm
+- [X] T003 [P] Install TypeScript and dev dependencies: @types/node, @types/express, typescript, ts-node
+- [X] T004 [P] Create tsconfig.json with strict mode enabled in repository root
+- [X] T005 [P] Create .gitignore file (node_modules, dist, recordings, .env) in repository root
+- [X] T006 [P] Create .env.example with MAX_CONCURRENT_SESSIONS=10, PORT=3000 in repository root
 
 **Completion Criteria**:
 - `npm install` runs without errors
@@ -58,14 +58,14 @@ This document breaks down the implementation into executable tasks organized by 
 
 **Tasks**:
 
-- [ ] T007 [P] Define SessionData interface in src/types/session.ts with id, ttl, createdAt, lastActivityAt, expiresAt, browserContext, timeoutHandle, recordingMetadata fields
-- [ ] T008 [P] Define RecordingMetadata interface in src/types/recording.ts with enabled, playbackUrl, filePath, startedAt, size fields
-- [ ] T009 [P] Define CommandRequest interface in src/types/command.ts with command, selector, options fields
-- [ ] T010 [P] Define CommandResponse interface in src/types/command.ts with result, executedAt fields
-- [ ] T011 [P] Define CommandError interface in src/types/errors.ts with type, message, details fields
-- [ ] T012 [P] Define custom error classes (SessionNotFoundError, CommandNotFoundError, ValidationError, TimeoutError, ElementNotFoundError, ExecutionError, MaxSessionsReachedError) in src/types/errors.ts
-- [ ] T013 Implement error handling middleware in src/middleware/error.ts that maps error types to HTTP status codes and formats error responses
-- [ ] T014 Create Express app initialization in src/server.ts with JSON middleware, error handler, and server startup logic
+- [X] T007 [P] Define SessionData interface in src/types/session.ts with id, ttl, createdAt, lastActivityAt, expiresAt, browserContext, timeoutHandle, recordingMetadata fields
+- [X] T008 [P] Define RecordingMetadata interface in src/types/recording.ts with enabled, playbackUrl, filePath, startedAt, size fields
+- [X] T009 [P] Define CommandRequest interface in src/types/command.ts with command, selector, options fields
+- [X] T010 [P] Define CommandResponse interface in src/types/command.ts with result, executedAt fields
+- [X] T011 [P] Define CommandError interface in src/types/errors.ts with type, message, details fields
+- [X] T012 [P] Define custom error classes (SessionNotFoundError, CommandNotFoundError, ValidationError, TimeoutError, ElementNotFoundError, ExecutionError, MaxSessionsReachedError) in src/types/errors.ts
+- [X] T013 Implement error handling middleware in src/middleware/error.ts that maps error types to HTTP status codes and formats error responses
+- [X] T014 Create Express app initialization in src/server.ts with JSON middleware, error handler, and server startup logic
 
 **Completion Criteria**:
 - All TypeScript types compile without errors
@@ -93,16 +93,16 @@ This document breaks down the implementation into executable tasks organized by 
 
 **Tasks**:
 
-- [ ] T015 [US1] Initialize Patchright browser singleton in src/services/browser.ts with chromium.launch({ headless: true })
-- [ ] T016 [US1] Implement in-memory session store (Map<string, SessionData>) in src/services/session.ts
-- [ ] T017 [US1] Implement createSession function in src/services/session.ts that generates UUID, creates browser context, initializes page, sets up TTL timer, stores session in Map, returns SessionData
-- [ ] T018 [US1] Implement cleanupSession function in src/services/session.ts that clears timeout, closes browser context, removes from Map
-- [ ] T019 [US1] Implement TTL timer setup in src/utils/ttl.ts that schedules cleanupSession via setTimeout
-- [ ] T020 [US1] Implement resetSessionTTL function in src/utils/ttl.ts that clears old timer, updates timestamps, creates new timeout
-- [ ] T021 [US1] Implement POST /sessions endpoint in src/routes/session.ts that validates TTL (60000-14400000ms), calls createSession, returns 201 with session URLs
-- [ ] T022 [US1] Implement DELETE /sessions/:id endpoint in src/routes/session.ts that calls cleanupSession and returns 200
-- [ ] T023 [US1] Add session limit enforcement in createSession that checks Map.size against MAX_CONCURRENT_SESSIONS env var, throws MaxSessionsReachedError if exceeded
-- [ ] T024 [US1] Register session routes in src/server.ts with app.use('/sessions', sessionRouter)
+- [X] T015 [US1] Initialize Patchright browser singleton in src/services/browser.ts with chromium.launch({ headless: true })
+- [X] T016 [US1] Implement in-memory session store (Map<string, SessionData>) in src/services/session.ts
+- [X] T017 [US1] Implement createSession function in src/services/session.ts that generates UUID, creates browser context, initializes page, sets up TTL timer, stores session in Map, returns SessionData
+- [X] T018 [US1] Implement cleanupSession function in src/services/session.ts that clears timeout, closes browser context, removes from Map
+- [X] T019 [US1] Implement TTL timer setup in src/utils/ttl.ts that schedules cleanupSession via setTimeout
+- [X] T020 [US1] Implement resetSessionTTL function in src/utils/ttl.ts that clears old timer, updates timestamps, creates new timeout
+- [X] T021 [US1] Implement POST /sessions endpoint in src/routes/session.ts that validates TTL (60000-14400000ms), calls createSession, returns 201 with session URLs
+- [X] T022 [US1] Implement DELETE /sessions/:id endpoint in src/routes/session.ts that calls cleanupSession and returns 200
+- [X] T023 [US1] Add session limit enforcement in createSession that checks Map.size against MAX_CONCURRENT_SESSIONS env var, throws MaxSessionsReachedError if exceeded
+- [X] T024 [US1] Register session routes in src/server.ts with app.use('/sessions', sessionRouter)
 
 **Completion Criteria** (US1 Acceptance Scenarios):
 1. POST /sessions with 30-min TTL returns unique session URL and stop URL
@@ -137,17 +137,17 @@ This document breaks down the implementation into executable tasks organized by 
 
 **Tasks**:
 
-- [ ] T025 [US2] Define CommandRegistry type in src/services/command.ts as Record<string, CommandHandler> where CommandHandler is (page, params) => Promise<any>
-- [ ] T026 [P] [US2] Implement navigate command handler in src/services/command.ts that calls page.goto with options.url and options.waitUntil
-- [ ] T027 [P] [US2] Implement click command handler in src/services/command.ts that calls page.locator(selector).click with options
-- [ ] T028 [P] [US2] Implement type/fill command handler in src/services/command.ts that calls page.locator(selector).fill with options.text
-- [ ] T029 [P] [US2] Implement textContent command handler in src/services/command.ts that calls page.locator(selector).textContent and returns result
-- [ ] T030 [P] [US2] Implement screenshot command handler in src/services/command.ts that calls page.screenshot with options, returns base64 encoded buffer
-- [ ] T031 [P] [US2] Implement additional command handlers in src/services/command.ts: getAttribute, press, waitForSelector, evaluate
-- [ ] T032 [US2] Implement executeCommand function in src/services/command.ts that validates command exists, retrieves session, gets page, executes handler, catches errors, resets TTL on success
-- [ ] T033 [US2] Implement request validation middleware in src/middleware/validation.ts that validates CommandRequest schema (command required, selector required for element commands)
-- [ ] T034 [US2] Implement POST /sessions/:id/command endpoint in src/routes/command.ts that validates request, calls executeCommand, returns CommandResponse with result and executedAt
-- [ ] T035 [US2] Register command routes in src/server.ts with app.use('/sessions', commandRouter)
+- [X] T025 [US2] Define CommandRegistry type in src/services/command.ts as Record<string, CommandHandler> where CommandHandler is (page, params) => Promise<any>
+- [X] T026 [P] [US2] Implement navigate command handler in src/services/command.ts that calls page.goto with options.url and options.waitUntil
+- [X] T027 [P] [US2] Implement click command handler in src/services/command.ts that calls page.locator(selector).click with options
+- [X] T028 [P] [US2] Implement type/fill command handler in src/services/command.ts that calls page.locator(selector).fill with options.text
+- [X] T029 [P] [US2] Implement textContent command handler in src/services/command.ts that calls page.locator(selector).textContent and returns result
+- [X] T030 [P] [US2] Implement screenshot command handler in src/services/command.ts that calls page.screenshot with options, returns base64 encoded buffer
+- [X] T031 [P] [US2] Implement additional command handlers in src/services/command.ts: getAttribute, press, waitForSelector, evaluate
+- [X] T032 [US2] Implement executeCommand function in src/services/command.ts that validates command exists, retrieves session, gets page, executes handler, catches errors, resets TTL on success
+- [X] T033 [US2] Implement request validation middleware in src/middleware/validation.ts that validates CommandRequest schema (command required, selector required for element commands)
+- [X] T034 [US2] Implement POST /sessions/:id/command endpoint in src/routes/command.ts that validates request, calls executeCommand, returns CommandResponse with result and executedAt
+- [X] T035 [US2] Register command routes in src/server.ts with app.use('/sessions', commandRouter)
 
 **Completion Criteria** (US2 Acceptance Scenarios):
 1. Navigate command successfully navigates browser to URL
@@ -180,12 +180,12 @@ This document breaks down the implementation into executable tasks organized by 
 
 **Tasks**:
 
-- [ ] T036 [US3] Add recordVideo configuration in createSession (src/services/session.ts) that creates recordings/<sessionId> directory and configures browser context with recordVideo option when recording:true
-- [ ] T037 [US3] Generate playbackUrl in createSession (src/services/session.ts) as /recordings/<sessionId>/video.webm when recording enabled, add to RecordingMetadata
-- [ ] T038 [US3] Implement recording cleanup scheduler in src/services/recording.ts with setInterval (every 15 min) that scans recordings directory, deletes directories where session ended >1 hour ago
-- [ ] T039 [US3] Create recordings/ directory structure on server startup in src/server.ts using fs.mkdir with recursive:true
-- [ ] T040 [US3] Implement GET /recordings/:sessionId/video.webm endpoint using express.static middleware in src/routes/recording.ts with proper video/webm Content-Type header
-- [ ] T041 [US3] Register recording routes and static middleware in src/server.ts with app.use('/recordings', express.static('recordings'))
+- [X] T036 [US3] Add recordVideo configuration in createSession (src/services/session.ts) that creates recordings/<sessionId> directory and configures browser context with recordVideo option when recording:true
+- [X] T037 [US3] Generate playbackUrl in createSession (src/services/session.ts) as /recordings/<sessionId>/video.webm when recording enabled, add to RecordingMetadata
+- [X] T038 [US3] Implement recording cleanup scheduler in src/services/recording.ts with setInterval (every 15 min) that scans recordings directory, deletes directories where session ended >1 hour ago
+- [X] T039 [US3] Create recordings/ directory structure on server startup in src/server.ts using fs.mkdir with recursive:true
+- [X] T040 [US3] Implement GET /recordings/:sessionId/video.webm endpoint using express.static middleware in src/routes/recording.ts with proper video/webm Content-Type header
+- [X] T041 [US3] Register recording routes and static middleware in src/server.ts with app.use('/recordings', express.static('recordings'))
 
 **Completion Criteria** (US3 Acceptance Scenarios):
 1. POST /sessions with recording:true returns session URL, stop URL, playback URL
@@ -217,10 +217,10 @@ This document breaks down the implementation into executable tasks organized by 
 
 **Tasks**:
 
-- [ ] T042 [P] [US4] Add MAX_CONCURRENT_SESSIONS validation in createSession (src/services/session.ts) - already implemented in T023, verify it works correctly
-- [ ] T043 [P] [US4] Verify session isolation in browser context creation (src/services/browser.ts) - each newContext call provides isolated cookies, storage, authentication
-- [ ] T044 [US4] Add session listing endpoint GET /sessions in src/routes/session.ts that returns array of active session IDs with remaining TTL (optional, useful for testing)
-- [ ] T045 [US4] Document concurrent session behavior and limits in README.md (create if doesn't exist) with examples of parallel usage
+- [X] T042 [P] [US4] Add MAX_CONCURRENT_SESSIONS validation in createSession (src/services/session.ts) - already implemented in T023, verify it works correctly
+- [X] T043 [P] [US4] Verify session isolation in browser context creation (src/services/browser.ts) - each newContext call provides isolated cookies, storage, authentication
+- [X] T044 [US4] Add session listing endpoint GET /sessions in src/routes/session.ts that returns array of active session IDs with remaining TTL (optional, useful for testing)
+- [X] T045 [US4] Document concurrent session behavior and limits in README.md (create if doesn't exist) with examples of parallel usage
 
 **Completion Criteria** (US4 Acceptance Scenarios):
 1. 5 simultaneous session creation requests all succeed with unique URLs
@@ -242,9 +242,9 @@ This document breaks down the implementation into executable tasks organized by 
 
 **Tasks**:
 
-- [ ] T046 [P] Add comprehensive error messages for all error types in src/middleware/error.ts with user-friendly descriptions
-- [ ] T047 [P] Add environment variable validation on server startup in src/server.ts (PORT, MAX_CONCURRENT_SESSIONS with sensible defaults)
-- [ ] T048 [P] Create README.md in repository root with quick start guide, API documentation reference to quickstart.md, and deployment instructions
+- [X] T046 [P] Add comprehensive error messages for all error types in src/middleware/error.ts with user-friendly descriptions
+- [X] T047 [P] Add environment variable validation on server startup in src/server.ts (PORT, MAX_CONCURRENT_SESSIONS with sensible defaults)
+- [X] T048 [P] Create README.md in repository root with quick start guide, API documentation reference to quickstart.md, and deployment instructions
 
 **Completion Criteria**:
 - All error responses include clear, actionable messages
