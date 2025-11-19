@@ -26,13 +26,17 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first to leverage caching
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (including patchright)
 RUN npm ci --only=production
 
-# Copy source code
+# Install Playwright browsers early (before copying source code)
+# This layer will be cached and won't rebuild unless package.json changes
+RUN npx patchright install chromium
+
+# Copy source code (changes here won't invalidate browser cache)
 COPY tsconfig.json ./
 COPY src ./src
 
@@ -40,9 +44,6 @@ COPY src ./src
 RUN npm install typescript @types/node @types/express @types/uuid --save-dev && \
     npm run build && \
     npm prune --production
-
-# Install Playwright browsers
-RUN npx patchright install chromium
 
 # Expose the port the app runs on
 EXPOSE 3000
