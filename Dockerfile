@@ -29,8 +29,8 @@ WORKDIR /app
 # Copy package files first to leverage caching
 COPY package*.json ./
 
-# Install dependencies (including patchright)
-RUN npm ci --only=production
+# Install all dependencies (including devDependencies for build)
+RUN npm ci
 
 # Install Playwright browsers early (before copying source code)
 # This layer will be cached and won't rebuild unless package.json changes
@@ -41,9 +41,19 @@ COPY tsconfig.json ./
 COPY src ./src
 
 # Build TypeScript
-RUN npm install typescript @types/node @types/express @types/uuid --save-dev && \
-    npm run build && \
-    npm prune --production
+RUN npm run build
+
+# Prune dev dependencies for smaller image
+RUN npm prune --production
+
+# Create non-root user and set up permissions
+RUN groupadd -r nodejs && useradd -r -g nodejs nodejs && \
+    chown -R nodejs:nodejs /app && \
+    mkdir -p /home/nodejs/.cache && \
+    cp -r /root/.cache/ms-playwright /home/nodejs/.cache/ && \
+    chown -R nodejs:nodejs /home/nodejs/.cache
+
+USER nodejs
 
 # Expose the port the app runs on
 EXPOSE 3000
