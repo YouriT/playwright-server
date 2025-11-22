@@ -53,3 +53,13 @@ export class MaxSessionsReachedError extends Error {
     this.name = 'MaxSessionsReachedError';
   }
 }
+
+export class ProxyValidationError extends Error {
+  constructor(
+    message: string,
+    public details?: string[]
+  ) {
+    super(message);
+    this.name = 'ProxyValidationError';
+  }
+}

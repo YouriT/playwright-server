@@ -1,3 +1,9 @@
+node_modules
+dist
+build
+coverage
+*.log
+package-lock.json
 .vercel
 .next
 pnpm-lock.yaml

@@ -11,7 +11,20 @@ import { errorHandler } from './middleware/error';
 import sessionRouter from './routes/session';
 import commandRouter from './routes/command';
 import { ensureRecordingsDirectory, startRecordingCleanupScheduler } from './services/recording';
+import { getGlobalProxyConfig } from './services/proxy';
+import { ProxyConfig } from './types/proxy';
 import { logger } from './utils/logger';
+
+// Global proxy configuration (loaded at startup)
+let globalProxyConfig: ProxyConfig | null = null;
+
+/**
+ * Get the global proxy configuration
+ * Returns null if no global proxy is configured
+ */
+export function getGlobalProxy(): ProxyConfig | null {
+  return globalProxyConfig;
+}
 
 const app: Express = express();
 
@@ -72,6 +85,35 @@ async function startServer() {
   // Validate environment variables
   validateEnvironment();
 
+  // Load and validate global proxy configuration
+  try {
+    globalProxyConfig = getGlobalProxyConfig();
+    if (globalProxyConfig) {
+      logger.info(
+        {
+          type: 'proxy_config',
+          source: 'global',
+          protocol: globalProxyConfig.protocol,
+          hostname: globalProxyConfig.hostname,
+          port: globalProxyConfig.port,
+          hasAuth: !!(globalProxyConfig.username && globalProxyConfig.password),
+          bypass: globalProxyConfig.bypass
+        },
+        'Global proxy configured successfully'
+      );
+    }
+  } catch (error) {
+    // Proxy configuration errors are fatal - server cannot start with invalid proxy
+    logger.error(
+      {
+        type: 'proxy_config_error',
+        error: error instanceof Error ? error.message : String(error)
+      },
+      'Failed to load global proxy configuration - server startup aborted'
+    );
+    process.exit(1);
+  }
+
   // Ensure recordings directory exists
   await ensureRecordingsDirectory();
 
@@ -84,7 +126,8 @@ async function startServer() {
         type: 'server_start',
         port: PORT,
         maxConcurrentSessions: process.env.MAX_CONCURRENT_SESSIONS || 10,
-        healthCheck: `http://localhost:${PORT}/health`
+        healthCheck: `http://localhost:${PORT}/health`,
+        globalProxy: globalProxyConfig ? true : false
       },
       'Playwright HTTP Wrapper server started'
     );

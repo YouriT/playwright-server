@@ -1,6 +1,7 @@
 import pino from 'pino';
 import os from 'os';
 import { SessionLogEntry } from '../types/command';
+import { maskProxyServerUrl } from './proxy';
 
 // ECS log level to numeric severity mapping (RFC 5424 syslog)
 const LOG_LEVEL_SEVERITY: Record<string, number> = {
@@ -12,9 +13,69 @@ const LOG_LEVEL_SEVERITY: Record<string, number> = {
   fatal: 2 // Critical
 };
 
+// Proxy redaction paths for Pino redact configuration
+const PROXY_REDACTION_PATHS = [
+  // Direct proxy config
+  'proxy.username',
+  'proxy.password',
+  'proxy.server',
+
+  // Nested configurations
+  'proxyConfig.username',
+  'proxyConfig.password',
+  'proxyConfig.server',
+
+  // Wildcard patterns for dynamic structures
+  '*.proxy.username',
+  '*.proxy.password',
+  '*.proxy.server',
+  '*.proxyConfig.username',
+  '*.proxyConfig.password',
+  '*.proxyConfig.server',
+
+  // API request parameters
+  'params.proxy.username',
+  'params.proxy.password',
+  'params.proxy.server'
+];
+
+/**
+ * Custom censor function for proxy credentials
+ * Provides debug-friendly redaction with hints
+ */
+function proxyCredentialCensor(value: any, path: string[]): string {
+  const pathString = path.join('.');
+  const valueString = value?.toString() || '';
+
+  // Password: show character count only (for debugging)
+  if (pathString.includes('password')) {
+    return `[REDACTEDx${valueString.length}]`;
+  }
+
+  // Username: show first character
+  if (pathString.includes('username')) {
+    return valueString.length > 0
+      ? `${valueString[0]}${'*'.repeat(Math.max(0, valueString.length - 1))}`
+      : '[REDACTED]';
+  }
+
+  // Proxy server URL: mask embedded credentials
+  if (pathString.includes('server')) {
+    return maskProxyServerUrl(valueString);
+  }
+
+  return '[REDACTED]';
+}
+
 // Configure pino logger for structured JSON output with ECS compliance
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
+  // Redact sensitive proxy credentials from logs
+  redact: {
+    paths: PROXY_REDACTION_PATHS,
+    censor: proxyCredentialCensor,
+    remove: false
+  },
   formatters: {
     level: (label, number) => {
       // In development, use simple level name; in production, use ECS format

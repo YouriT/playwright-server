@@ -8,6 +8,9 @@ build/
 # Recordings (session videos)
 recordings/
 
+# User data directories (persistent browser contexts)
+user-data/
+
 # Environment variables
 .env
 .env.local
@@ -39,3 +42,6 @@ quicktest/
 
 # Temporary files
 *.tmp
+
+# Local proxy
+local-proxy/

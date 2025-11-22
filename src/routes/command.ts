@@ -86,7 +86,7 @@ router.post('/:id/command', async (req: Request, res: Response, next: NextFuncti
       );
 
       res.json({
-        result,
+        result: result === undefined ? null : result,
         executedAt: new Date().toISOString(),
         durationMs: parseFloat(durationMs.toFixed(3))
       });

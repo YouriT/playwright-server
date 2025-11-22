@@ -1,0 +1,277 @@
+openapi: 3.0.3
+info:
+  title: Playwright HTTP Wrapper API - Proxy Support Extension
+  version: 1.1.0
+  description: |
+    Extension to Playwright HTTP Wrapper API adding proxy configuration support.
+    This spec documents changes to support proxy configuration at global (environment variable)
+    and per-session (API request) levels.
+  contact:
+    name: Playwright Server
+    url: https://github.com/YouriT/playwright-server
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: Sessions
+    description: Session lifecycle management with proxy support
+
+paths:
+  /sessions:
+    post:
+      tags:
+        - Sessions
+      summary: Create a new browser automation session with optional proxy
+      description: |
+        Creates a new session with optional proxy configuration.
+        Proxy can be specified per-session (overrides global) or use global default from environment variables.
+        Supports HTTP, HTTPS, and SOCKS5 proxies with optional authentication.
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ttl
+              properties:
+                ttl:
+                  type: integer
+                  description: Time-to-live in milliseconds
+                  minimum: 60000
+                  maximum: 14400000
+                  default: 1800000
+                  example: 1800000
+                recording:
+                  type: boolean
+                  description: Enable video recording of the session
+                  default: false
+                  example: false
+                videoSize:
+                  type: object
+                  description: Video dimensions (only used if recording is enabled)
+                  properties:
+                    width:
+                      type: integer
+                      example: 1280
+                    height:
+                      type: integer
+                      example: 720
+                proxy:
+                  $ref: '#/components/schemas/ProxyConfig'
+            examples:
+              noProxy:
+                summary: Session without proxy (direct connection)
+                value:
+                  ttl: 1800000
+                  recording: false
+              proxyUrl:
+                summary: Session with proxy URL
+                value:
+                  ttl: 1800000
+                  recording: false
+                  proxy:
+                    server: 'http://proxy.brightdata.com:22225'
+                    username: 'customer-user'
+                    password: 'secret123'
+              proxySocks5:
+                summary: Session with SOCKS5 proxy
+                value:
+                  ttl: 1800000
+                  proxy:
+                    server: 'socks5://proxy-us.example.com:1080'
+                    username: 'user'
+                    password: 'pass'
+              proxyWithBypass:
+                summary: Session with proxy and bypass rules
+                value:
+                  ttl: 1800000
+                  proxy:
+                    server: 'http://proxy.example.com:8080'
+                    bypass: 'localhost,127.0.0.1,.internal.com'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionCreatedResponse'
+        '400':
+          description: Invalid request parameters or proxy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidTtl:
+                  summary: Invalid TTL
+                  value:
+                    error: 'ValidationError'
+                    message: 'Invalid TTL value: must be between 60000 and 14400000 milliseconds'
+                invalidProxyUrl:
+                  summary: Invalid proxy URL format
+                  value:
+                    error: 'ProxyValidationError'
+                    message: 'Invalid proxy URL format'
+                    details:
+                      field: 'proxy.server'
+                      value: 'not-a-valid-url'
+                unsupportedProtocol:
+                  summary: Unsupported proxy protocol
+                  value:
+                    error: 'ProxyValidationError'
+                    message: 'Unsupported proxy protocol: socks4. Supported protocols: http, https, socks5'
+                incompleteAuth:
+                  summary: Incomplete proxy authentication
+                  value:
+                    error: 'ProxyValidationError'
+                    message: 'Proxy authentication incomplete: username provided without password'
+        '503':
+          description: Maximum concurrent sessions reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'MaxSessionsReached'
+                message: 'Maximum concurrent sessions limit reached (10). Please try again later.'
+
+components:
+  schemas:
+    ProxyConfig:
+      type: object
+      description: Proxy server configuration with optional authentication
+      required:
+        - server
+      properties:
+        server:
+          type: string
+          format: uri
+          description: |
+            Proxy server URL in format: protocol://[username:password@]host:port
+            Supported protocols: http, https, socks5
+            Examples:
+            - http://proxy.example.com:8080
+            - http://user:pass@proxy.example.com:8080
+            - https://proxy.example.com:443
+            - socks5://127.0.0.1:1080
+          example: 'http://proxy.brightdata.com:22225'
+        username:
+          type: string
+          description: |
+            Optional: proxy authentication username (alternative to embedding in server URL).
+            If provided, password must also be provided.
+          example: 'customer-user'
+        password:
+          type: string
+          format: password
+          description: |
+            Optional: proxy authentication password (alternative to embedding in server URL).
+            If provided, username must also be provided.
+          example: 'secret123'
+        bypass:
+          type: string
+          description: |
+            Optional: comma-separated list of domains to exclude from proxy.
+            Examples: "localhost,127.0.0.1,.internal.com"
+          example: 'localhost,127.0.0.1'
+      example:
+        server: 'http://proxy.example.com:8080'
+        username: 'user'
+        password: 'pass'
+        bypass: 'localhost,127.0.0.1'
+
+    SessionCreatedResponse:
+      type: object
+      required:
+        - sessionId
+        - sessionUrl
+        - stopUrl
+        - expiresAt
+        - createdAt
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+        sessionUrl:
+          type: string
+          format: uri
+          description: URL to execute commands on this session
+          example: 'http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/command'
+        stopUrl:
+          type: string
+          format: uri
+          description: URL to terminate this session
+          example: 'http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+        playbackUrl:
+          type: string
+          format: uri
+          description: URL to access the recording (only present if recording enabled)
+          example: 'http://localhost:3000/recordings/a1b2c3d4-e5f6-7890-abcd-ef1234567890/video.webm'
+        expiresAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when session will expire
+          example: '2025-11-22T11:00:00.000Z'
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when session was created
+          example: '2025-11-22T10:30:00.000Z'
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type/code
+          enum:
+            - SessionNotFoundError
+            - ValidationError
+            - ProxyValidationError
+            - ProxyConnectionError
+            - MaxSessionsReached
+          example: 'ProxyValidationError'
+        message:
+          type: string
+          description: Human-readable error message
+          example: 'Invalid proxy URL format'
+        details:
+          type: object
+          description: Additional error context (optional)
+          additionalProperties: true
+          example:
+            field: 'proxy.server'
+            value: 'invalid-url'
+
+  examples:
+    GlobalProxySession:
+      summary: Session using global proxy from environment variables
+      description: |
+        When HTTP_PROXY environment variable is set, sessions automatically use it unless overridden.
+        This example shows a session creation request without proxy config, which will use the global proxy.
+      value:
+        ttl: 1800000
+        recording: false
+
+    SessionSpecificProxy:
+      summary: Session with explicit proxy overriding global
+      description: |
+        Session-specific proxy configuration takes precedence over global proxy from environment variables.
+      value:
+        ttl: 1800000
+        proxy:
+          server: 'socks5://proxy-eu.example.com:1080'
+          username: 'customer-eu'
+          password: 'secret456'
+
+externalDocs:
+  description: Proxy Configuration Guide
+  url: https://github.com/YouriT/playwright-server/blob/main/specs/003-proxy-support/quickstart.md

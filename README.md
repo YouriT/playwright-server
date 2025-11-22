@@ -12,6 +12,7 @@ A lightweight HTTP server that wraps Playwright (via Patchright) functionality, 
 - **Video Recording**: Optional session recording with automatic cleanup
 - **Concurrent Sessions**: Support for multiple simultaneous browser sessions
 - **Automatic Cleanup**: TTL-based session expiration and resource management
+- **Proxy Support**: Route browser traffic through HTTP, HTTPS, or SOCKS5 proxies with optional authentication
 
 ## Quick Start
 
@@ -34,6 +35,11 @@ Create `.env` file for custom settings:
 - `MAX_CONCURRENT_SESSIONS` - Max concurrent sessions (default: 10)
 - `RECORDINGS_DIR` - Recording directory (default: ./recordings)
 - `LOG_LEVEL` - info, debug, error (default: info)
+- `HTTP_PROXY` - Global HTTP/HTTPS proxy (optional)
+- `HTTPS_PROXY` - Global HTTPS proxy override (optional)
+- `NO_PROXY` - Comma-separated list of hosts to bypass proxy (optional)
+
+**Note:** This server uses Patchright with bundled Chromium browser for enhanced stealth capabilities.
 
 ## API Usage
 
@@ -78,11 +84,62 @@ curl -X DELETE http://localhost:3000/sessions/{sessionId}
 
 ## Available Commands
 
-**Navigation**: `navigate`, `goto`  
-**Interaction**: `click`, `type`, `fill`, `press`  
-**Extraction**: `textContent`, `getAttribute`, `screenshot`, `evaluate`  
-**Timing**: `waitForSelector`  
-**State**: `cookies`, `setCookies`, `setExtraHTTPHeaders`
+### Navigation
+
+- `navigate`, `goto` - Navigate to URL
+- `reload` - Reload current page
+- `goBack` - Navigate back in history
+- `goForward` - Navigate forward in history
+- `waitForLoadState` - Wait for specific load state
+
+### Element Interaction
+
+- `click` - Click element
+- `dblclick` - Double-click element
+- `type`, `fill` - Fill input with text
+- `press` - Press keyboard key
+- `hover` - Hover over element
+- `check` - Check checkbox/radio
+- `uncheck` - Uncheck checkbox
+- `selectOption` - Select dropdown option
+- `dragAndDrop` - Drag element to target
+
+### Element State Checking
+
+- `isVisible` - Check if element is visible
+- `isHidden` - Check if element is hidden
+- `isEnabled` - Check if element is enabled
+- `isDisabled` - Check if element is disabled
+- `isEditable` - Check if element is editable
+- `isChecked` - Check if checkbox/radio is checked
+
+### Content Retrieval
+
+- `textContent` - Get element text content
+- `innerHTML` - Get element inner HTML
+- `innerText` - Get element inner text
+- `inputValue` - Get input value
+- `getAttribute` - Get element attribute
+- `title` - Get page title
+- `url` - Get current URL
+- `content` - Get full page HTML
+- `screenshot` - Take page screenshot
+- `cookies` - Get all cookies
+
+### Page Manipulation
+
+- `waitForSelector` - Wait for element to appear
+- `evaluate` - Execute JavaScript in page
+- `setExtraHTTPHeaders` - Set custom HTTP headers
+- `setCookies` - Set cookies
+
+### Utility
+
+- `wait` - Wait for duration (ms)
+- `bringToFront` - Activate page/tab
+- `focus` - Focus on element
+- `blur` - Remove focus from element
+- `scrollIntoViewIfNeeded` - Scroll element into view
 
 ## Session Recording
 
@@ -95,6 +152,62 @@ Supports multiple sessions (default: 10) with isolated contexts. List active ses
 ```bash
 curl http://localhost:3000/sessions
 ```
+
+## Proxy Configuration
+
+Route browser traffic through HTTP, HTTPS, or SOCKS5 proxies.
+
+### Global Proxy (Environment Variables)
+
+Set via environment variables to apply to all sessions by default:
+
+```bash
+# HTTP/HTTPS proxy
+export HTTP_PROXY="http://proxy.example.com:8080"
+
+# With authentication
+export HTTP_PROXY="http://username:password@proxy.example.com:8080"
+
+# SOCKS5 proxy
+export HTTP_PROXY="socks5://proxy.example.com:1080"
+
+# Bypass proxy for specific hosts
+export NO_PROXY="localhost,127.0.0.1,.example.com"
+```
+
+### Per-Session Proxy (API)
+
+Override global proxy for specific sessions:
+
+```bash
+# HTTP proxy with authentication
+curl -X POST http://localhost:3000/sessions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ttl": 1800000,
+    "proxy": {
+      "server": "http://proxy.example.com:8080",
+      "username": "user",
+      "password": "pass"
+    }
+  }'
+
+# SOCKS5 proxy without authentication
+curl -X POST http://localhost:3000/sessions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ttl": 1800000,
+    "proxy": {
+      "server": "socks5://proxy.example.com:1080"
+    }
+  }'
+```
+
+**Supported protocols:** `http://`, `https://`, `socks5://`
+
+**Priority:** Per-session proxy > Global proxy > Direct connection
+
+**Note:** Proxy credentials are automatically redacted from logs for security.
 
 ## License
 
