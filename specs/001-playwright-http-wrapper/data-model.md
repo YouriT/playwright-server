@@ -14,22 +14,24 @@ Represents an active browser automation session with a unique identifier and ass
 
 ### Fields
 
-| Field | Type | Required | Description | Constraints |
-|-------|------|----------|-------------|-------------|
-| `id` | string (UUID v4) | Yes | Unique session identifier | Auto-generated, immutable |
-| `ttl` | number | Yes | Time-to-live in milliseconds | Min: 60000 (1 minute), Max: 14400000 (4 hours), Default: 1800000 (30 minutes) |
-| `createdAt` | Date | Yes | Timestamp when session was created | Auto-generated, immutable |
-| `lastActivityAt` | Date | Yes | Timestamp of last command execution | Auto-updated on each command |
-| `expiresAt` | Date | Yes | Computed expiration time | Computed: `lastActivityAt + ttl`, updated on each command |
-| `browserContext` | BrowserContext | Yes | Patchright browser context instance | Reference to Playwright object, not serializable |
-| `timeoutHandle` | NodeJS.Timeout | Yes | Timer handle for automatic cleanup | Internal use, manages TTL expiration |
-| `recordingMetadata` | RecordingMetadata \| null | No | Recording configuration and metadata | Null if recording not enabled |
+| Field               | Type                      | Required | Description                          | Constraints                                                                   |
+| ------------------- | ------------------------- | -------- | ------------------------------------ | ----------------------------------------------------------------------------- |
+| `id`                | string (UUID v4)          | Yes      | Unique session identifier            | Auto-generated, immutable                                                     |
+| `ttl`               | number                    | Yes      | Time-to-live in milliseconds         | Min: 60000 (1 minute), Max: 14400000 (4 hours), Default: 1800000 (30 minutes) |
+| `createdAt`         | Date                      | Yes      | Timestamp when session was created   | Auto-generated, immutable                                                     |
+| `lastActivityAt`    | Date                      | Yes      | Timestamp of last command execution  | Auto-updated on each command                                                  |
+| `expiresAt`         | Date                      | Yes      | Computed expiration time             | Computed: `lastActivityAt + ttl`, updated on each command                     |
+| `browserContext`    | BrowserContext            | Yes      | Patchright browser context instance  | Reference to Playwright object, not serializable                              |
+| `timeoutHandle`     | NodeJS.Timeout            | Yes      | Timer handle for automatic cleanup   | Internal use, manages TTL expiration                                          |
+| `recordingMetadata` | RecordingMetadata \| null | No       | Recording configuration and metadata | Null if recording not enabled                                                 |
 
 ### Relationships
+
 - **One-to-One with Recording**: Each session may have zero or one recording
 - **One-to-Many with Commands**: Each session processes zero or many commands during its lifetime
 
 ### Validation Rules
+
 - `id` must be unique across all active sessions
 - `ttl` must be between 60000ms (1 minute) and 14400000ms (4 hours)
 - `expiresAt` must always be `lastActivityAt + ttl`
@@ -39,7 +41,7 @@ Represents an active browser automation session with a unique identifier and ass
 ### State Transitions
 
 ```
-[Creation Request] 
+[Creation Request]
     ↓
 CREATING (browser context being initialized)
     ↓
@@ -53,6 +55,7 @@ TERMINATED (removed from session store)
 ```
 
 **State Rules**:
+
 - **CREATING → ACTIVE**: When browser context successfully initialized and page opened
 - **ACTIVE → ACTIVE**: On each successful command execution (TTL reset)
 - **ACTIVE → TERMINATING**: When TTL expires, stop URL called, or browser crashes
@@ -66,22 +69,24 @@ Represents a single Playwright/Patchright operation to be executed on a session.
 
 ### Fields
 
-| Field | Type | Required | Description | Constraints |
-|-------|------|----------|-------------|-------------|
-| `command` | string | Yes | Playwright method name | Must be registered in CommandRegistry |
-| `selector` | string | No | CSS/XPath selector for element operations | Required for element-targeting commands (click, type, etc.) |
-| `options` | object | No | Additional parameters for the command | Structure depends on specific command |
-| `result` | any | No | Return value from command execution | Populated after successful execution |
-| `error` | CommandError \| null | No | Error details if execution failed | Null if successful |
+| Field      | Type                 | Required | Description                               | Constraints                                                 |
+| ---------- | -------------------- | -------- | ----------------------------------------- | ----------------------------------------------------------- |
+| `command`  | string               | Yes      | Playwright method name                    | Must be registered in CommandRegistry                       |
+| `selector` | string               | No       | CSS/XPath selector for element operations | Required for element-targeting commands (click, type, etc.) |
+| `options`  | object               | No       | Additional parameters for the command     | Structure depends on specific command                       |
+| `result`   | any                  | No       | Return value from command execution       | Populated after successful execution                        |
+| `error`    | CommandError \| null | No       | Error details if execution failed         | Null if successful                                          |
 
 ### Command Types
 
 **Navigation Commands**:
+
 - `navigate` / `goto`: Navigate to URL
   - `options.url` (string, required): Target URL
   - `options.waitUntil` (string, optional): Load event to wait for ('load', 'domcontentloaded', 'networkidle')
 
 **Element Interaction Commands**:
+
 - `click`: Click element
   - `selector` (string, required): Element selector
   - `options.button` (string, optional): Mouse button ('left', 'right', 'middle')
@@ -93,6 +98,7 @@ Represents a single Playwright/Patchright operation to be executed on a session.
   - `options.key` (string, required): Key name (e.g., 'Enter', 'Escape')
 
 **Data Extraction Commands**:
+
 - `textContent`: Extract text from element
   - `selector` (string, required): Element selector
   - Returns: string | null
@@ -106,6 +112,7 @@ Represents a single Playwright/Patchright operation to be executed on a session.
   - Returns: Buffer (image data)
 
 **Page Manipulation Commands**:
+
 - `waitForSelector`: Wait for element to appear
   - `selector` (string, required): Element selector
   - `options.timeout` (number, optional): Max wait time in milliseconds
@@ -114,6 +121,7 @@ Represents a single Playwright/Patchright operation to be executed on a session.
   - Returns: any (serializable result)
 
 ### Validation Rules
+
 - `command` must exist in CommandRegistry
 - `selector` must be valid CSS or XPath selector when required
 - `options` must match expected schema for the specific command
@@ -121,20 +129,21 @@ Represents a single Playwright/Patchright operation to be executed on a session.
 - Cannot execute commands while previous command is still executing
 
 ### Relationships
+
 - **Many-to-One with Session**: Each command belongs to exactly one session
 
 ### Error Handling
 
 Commands may fail with these error types:
 
-| Error Type | HTTP Status | Description |
-|------------|-------------|-------------|
-| `SessionNotFoundError` | 404 | Session ID does not exist or has expired |
-| `CommandNotFoundError` | 400 | Command name not registered in CommandRegistry |
-| `ValidationError` | 400 | Invalid parameters or missing required fields |
-| `TimeoutError` | 408 | Command execution exceeded timeout (Playwright default: 30s) |
-| `ElementNotFoundError` | 404 | Selector did not match any elements |
-| `ExecutionError` | 500 | Command execution failed (browser crash, JavaScript error, etc.) |
+| Error Type             | HTTP Status | Description                                                      |
+| ---------------------- | ----------- | ---------------------------------------------------------------- |
+| `SessionNotFoundError` | 404         | Session ID does not exist or has expired                         |
+| `CommandNotFoundError` | 400         | Command name not registered in CommandRegistry                   |
+| `ValidationError`      | 400         | Invalid parameters or missing required fields                    |
+| `TimeoutError`         | 408         | Command execution exceeded timeout (Playwright default: 30s)     |
+| `ElementNotFoundError` | 404         | Selector did not match any elements                              |
+| `ExecutionError`       | 500         | Command execution failed (browser crash, JavaScript error, etc.) |
 
 ---
 
@@ -144,21 +153,23 @@ Represents video recording configuration and metadata for a session. Embedded wi
 
 ### Fields
 
-| Field | Type | Required | Description | Constraints |
-|-------|------|----------|-------------|-------------|
-| `enabled` | boolean | Yes | Whether recording is active | Immutable after session creation |
-| `playbackUrl` | string | Yes | URL to access the recording | Format: `/recordings/<sessionId>/video.webm` |
-| `filePath` | string | Yes | Filesystem path to recording directory | Format: `./recordings/<sessionId>/` |
-| `startedAt` | Date | Yes | When recording started | Set when session created |
-| `size` | { width: number, height: number } | No | Video dimensions | Default: { width: 1280, height: 720 } |
+| Field         | Type                              | Required | Description                            | Constraints                                  |
+| ------------- | --------------------------------- | -------- | -------------------------------------- | -------------------------------------------- |
+| `enabled`     | boolean                           | Yes      | Whether recording is active            | Immutable after session creation             |
+| `playbackUrl` | string                            | Yes      | URL to access the recording            | Format: `/recordings/<sessionId>/video.webm` |
+| `filePath`    | string                            | Yes      | Filesystem path to recording directory | Format: `./recordings/<sessionId>/`          |
+| `startedAt`   | Date                              | Yes      | When recording started                 | Set when session created                     |
+| `size`        | { width: number, height: number } | No       | Video dimensions                       | Default: { width: 1280, height: 720 }        |
 
 ### Validation Rules
+
 - `enabled` cannot be changed after session creation
 - `playbackUrl` must be unique (derived from unique session ID)
 - `filePath` must be writable directory
 - `size.width` and `size.height` must be positive integers if specified
 
 ### Relationships
+
 - **One-to-One with Session**: Each recording belongs to exactly one session
 - Recording files exist on filesystem independent of in-memory session state
 
@@ -179,6 +190,7 @@ DELETED (file removed from filesystem)
 ```
 
 **State Rules**:
+
 - **RECORDING**: Active throughout session lifetime
 - **FINALIZING**: Brief period when `context.close()` writes final video file
 - **AVAILABLE**: Playback URL returns 200 OK with video/webm content
@@ -193,13 +205,14 @@ Error information returned when command execution fails.
 
 ### Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `type` | string | Yes | Error category (see Error Handling section in Command entity) |
-| `message` | string | Yes | Human-readable error description |
-| `details` | object | No | Additional error context (stack trace, Playwright error details, etc.) |
+| Field     | Type   | Required | Description                                                            |
+| --------- | ------ | -------- | ---------------------------------------------------------------------- |
+| `type`    | string | Yes      | Error category (see Error Handling section in Command entity)          |
+| `message` | string | Yes      | Human-readable error description                                       |
+| `details` | object | No       | Additional error context (stack trace, Playwright error details, etc.) |
 
 ### Validation Rules
+
 - `type` must be one of the defined error types
 - `message` must be non-empty string
 - `details` should not contain sensitive information (passwords, tokens, etc.)
@@ -219,6 +232,7 @@ Session (1) ──┬── (0..1) RecordingMetadata
 ## Storage Implementation
 
 ### In-Memory Session Store
+
 ```typescript
 // sessions.ts
 const sessions = new Map<string, SessionData>();
@@ -236,6 +250,7 @@ interface SessionData {
 ```
 
 ### Filesystem Recording Storage
+
 ```
 recordings/
 ├── <session-id-1>/
@@ -254,10 +269,12 @@ recordings/
 ## Indexes and Lookups
 
 ### Primary Indexes
+
 - **Session by ID**: `sessions.get(sessionId)` - O(1) lookup
 - **Recording by session ID**: Derived from session ID in playback URL path
 
 ### No Secondary Indexes Needed
+
 - Small scale (max 10 concurrent sessions) doesn't require optimization
 - No queries beyond direct session ID lookup
 - No search or filtering requirements
@@ -266,12 +283,12 @@ recordings/
 
 ## Validation Summary
 
-| Entity | Creation Validation | Update Validation | Deletion Validation |
-|--------|---------------------|-------------------|---------------------|
-| Session | TTL range, unique ID | lastActivityAt must advance, expiresAt must update | Must close browser context before removal |
-| Command | Valid command name, required fields present | N/A (commands are immutable after execution) | N/A (commands not stored) |
-| RecordingMetadata | Valid file path, enabled flag | Immutable after creation | Must schedule file deletion 1 hour after session end |
-| CommandError | Valid error type | N/A (errors are immutable) | N/A (errors not stored) |
+| Entity            | Creation Validation                         | Update Validation                                  | Deletion Validation                                  |
+| ----------------- | ------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------- |
+| Session           | TTL range, unique ID                        | lastActivityAt must advance, expiresAt must update | Must close browser context before removal            |
+| Command           | Valid command name, required fields present | N/A (commands are immutable after execution)       | N/A (commands not stored)                            |
+| RecordingMetadata | Valid file path, enabled flag               | Immutable after creation                           | Must schedule file deletion 1 hour after session end |
+| CommandError      | Valid error type                            | N/A (errors are immutable)                         | N/A (errors not stored)                              |
 
 ---
 

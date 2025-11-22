@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import { logger } from '../utils/logger';
 
 const RECORDINGS_DIR = process.env.RECORDINGS_DIR || './recordings';
 const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -16,7 +17,7 @@ export function registerRecordingSession(sessionId: string, recordingPath: strin
   sessionMetadata.set(sessionId, {
     sessionId,
     endTime: null,
-    recordingPath,
+    recordingPath
   });
 }
 
@@ -35,9 +36,23 @@ export async function cleanupOldRecordings(): Promise<void> {
       try {
         await fs.rm(metadata.recordingPath, { recursive: true, force: true });
         sessionMetadata.delete(sessionId);
-        console.log(`Cleaned up recording for session ${sessionId}`);
+        logger.info(
+          {
+            type: 'recording_cleanup',
+            sessionId,
+            path: metadata.recordingPath
+          },
+          'Recording cleaned up'
+        );
       } catch (error) {
-        console.error(`Error cleaning up recording for session ${sessionId}:`, error);
+        logger.error(
+          {
+            type: 'recording_cleanup',
+            sessionId,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          'Error cleaning up recording'
+        );
       }
     }
   }
@@ -48,15 +63,33 @@ export function startRecordingCleanupScheduler(): void {
     cleanupOldRecordings();
   }, CLEANUP_INTERVAL_MS);
 
-  console.log('Recording cleanup scheduler started');
+  logger.info(
+    {
+      type: 'recording_scheduler',
+      interval: CLEANUP_INTERVAL_MS
+    },
+    'Recording cleanup scheduler started'
+  );
 }
 
 export async function ensureRecordingsDirectory(): Promise<void> {
   try {
     await fs.mkdir(RECORDINGS_DIR, { recursive: true });
-    console.log(`Recordings directory ensured: ${RECORDINGS_DIR}`);
+    logger.info(
+      {
+        type: 'recordings_directory',
+        path: RECORDINGS_DIR
+      },
+      'Recordings directory ensured'
+    );
   } catch (error) {
-    console.error('Error creating recordings directory:', error);
+    logger.error(
+      {
+        type: 'recordings_directory',
+        error: error instanceof Error ? error.message : String(error)
+      },
+      'Error creating recordings directory'
+    );
     throw error;
   }
 }

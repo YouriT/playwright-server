@@ -4,7 +4,7 @@ import {
   cleanupSession,
   getSession,
   getAllSessions,
-  CreateSessionOptions,
+  CreateSessionOptions
 } from '../services/session';
 import { ValidationError } from '../types/errors';
 
@@ -21,15 +21,13 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 
     if (ttl < 60000 || ttl > 14400000) {
-      throw new ValidationError(
-        'TTL must be between 60000ms (1 minute) and 14400000ms (4 hours)'
-      );
+      throw new ValidationError('TTL must be between 60000ms (1 minute) and 14400000ms (4 hours)');
     }
 
     const options: CreateSessionOptions = {
       ttl,
       recording: recording || false,
-      videoSize,
+      videoSize
     };
 
     const session = await createSession(options);
@@ -40,7 +38,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       sessionUrl: `http://localhost:${PORT}/sessions/${session.id}/command`,
       stopUrl: `http://localhost:${PORT}/sessions/${session.id}`,
       expiresAt: session.expiresAt.toISOString(),
-      createdAt: session.createdAt.toISOString(),
+      createdAt: session.createdAt.toISOString()
     };
 
     if (session.recordingMetadata) {
@@ -79,7 +77,7 @@ router.get('/', (_req: Request, res: Response, next: NextFunction) => {
       createdAt: session.createdAt.toISOString(),
       expiresAt: session.expiresAt.toISOString(),
       ttl: session.ttl,
-      remainingTTL: session.expiresAt.getTime() - Date.now(),
+      remainingTTL: session.expiresAt.getTime() - Date.now()
     }));
 
     res.json({ sessions: sessionList });

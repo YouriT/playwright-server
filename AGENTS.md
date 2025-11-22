@@ -4,6 +4,10 @@ Auto-generated from all feature plans. Last updated: 2025-11-19
 
 ## Active Technologies
 
+- TypeScript (strict mode), Node.js LTS (20.x or later) + Patchright (already in use), Express (already in use) (002-sequential-commands)
+- In-memory session store (no changes required) (002-sequential-commands)
+- TypeScript 5.9.3 (strict mode enabled), Node.js LTS (20.x or later) + Express 5.1.0, Patchright 1.56.1, uuid 13.0.0 (002-sequential-commands)
+
 - TypeScript (strict mode), Node.js LTS (20.x or later) (001-playwright-http-wrapper)
 
 ## Project Structure
@@ -23,6 +27,9 @@ npm test && npm run lint
 TypeScript (strict mode), Node.js LTS (20.x or later): Follow standard conventions
 
 ## Recent Changes
+
+- 002-sequential-commands: Added TypeScript 5.9.3 (strict mode enabled), Node.js LTS (20.x or later) + Express 5.1.0, Patchright 1.56.1, uuid 13.0.0
+- 002-sequential-commands: Added TypeScript (strict mode), Node.js LTS (20.x or later) + Patchright (already in use), Express (already in use)
 
 - 001-playwright-http-wrapper: Added TypeScript (strict mode), Node.js LTS (20.x or later)
 

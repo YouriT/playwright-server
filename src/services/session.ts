@@ -5,15 +5,13 @@ import { RecordingMetadata } from '../types/recording';
 import { getBrowser } from './browser';
 import { MaxSessionsReachedError, SessionNotFoundError } from '../types/errors';
 import { registerRecordingSession, markSessionEnded } from './recording';
+import { logger } from '../utils/logger';
 
 // In-memory session store
 const sessions = new Map<string, SessionData>();
 
 // Configuration
-const MAX_CONCURRENT_SESSIONS = parseInt(
-  process.env.MAX_CONCURRENT_SESSIONS || '10',
-  10
-);
+const MAX_CONCURRENT_SESSIONS = parseInt(process.env.MAX_CONCURRENT_SESSIONS || '10', 10);
 const PORT = process.env.PORT || 3000;
 const RECORDINGS_DIR = process.env.RECORDINGS_DIR || './recordings';
 
@@ -26,9 +24,7 @@ export interface CreateSessionOptions {
   };
 }
 
-export async function createSession(
-  options: CreateSessionOptions
-): Promise<SessionData> {
+export async function createSession(options: CreateSessionOptions): Promise<SessionData> {
   // Check session limit
   if (sessions.size >= MAX_CONCURRENT_SESSIONS) {
     throw new MaxSessionsReachedError(MAX_CONCURRENT_SESSIONS);
@@ -43,14 +39,14 @@ export async function createSession(
   // Setup recording if enabled
   let recordingMetadata: RecordingMetadata | null = null;
   const contextOptions: any = {
-    viewport: { width: 1920, height: 1080 },
+    viewport: { width: 1920, height: 1080 }
   };
 
   if (options.recording) {
     const recordingPath = path.join(RECORDINGS_DIR, sessionId);
     contextOptions.recordVideo = {
       dir: recordingPath,
-      size: options.videoSize || { width: 1280, height: 720 },
+      size: options.videoSize || { width: 1280, height: 720 }
     };
 
     recordingMetadata = {
@@ -58,7 +54,7 @@ export async function createSession(
       playbackUrl: `http://localhost:${PORT}/recordings/${sessionId}/video.webm`,
       filePath: recordingPath,
       startedAt: now,
-      size: options.videoSize,
+      size: options.videoSize
     };
 
     // Register recording session for cleanup
@@ -80,7 +76,7 @@ export async function createSession(
     timeoutHandle: setTimeout(() => {
       cleanupSession(sessionId);
     }, options.ttl),
-    recordingMetadata,
+    recordingMetadata
   };
 
   sessions.set(sessionId, sessionData);
@@ -99,7 +95,14 @@ export async function cleanupSession(sessionId: string): Promise<void> {
   try {
     await session.browserContext.close();
   } catch (error) {
-    console.error(`Error closing browser context for session ${sessionId}:`, error);
+    logger.error(
+      {
+        type: 'session_cleanup',
+        sessionId,
+        error: error instanceof Error ? error.message : String(error)
+      },
+      'Error closing browser context'
+    );
   }
 
   // After context closes, rename the video file to video.webm for consistent access
@@ -108,18 +111,32 @@ export async function cleanupSession(sessionId: string): Promise<void> {
       const fs = await import('fs/promises');
       const recordingDir = session.recordingMetadata.filePath;
       const files = await fs.readdir(recordingDir);
-      const webmFile = files.find(file => file.endsWith('.webm'));
-      
+      const webmFile = files.find((file) => file.endsWith('.webm'));
+
       if (webmFile && webmFile !== 'video.webm') {
         const sourcePath = path.join(recordingDir, webmFile);
         const destPath = path.join(recordingDir, 'video.webm');
         await fs.rename(sourcePath, destPath);
-        console.log(`Recording finalized: ${destPath}`);
+        logger.info(
+          {
+            type: 'recording_finalized',
+            sessionId,
+            path: destPath
+          },
+          'Recording finalized'
+        );
       }
     } catch (error) {
-      console.error(`Error finalizing recording for session ${sessionId}:`, error);
+      logger.error(
+        {
+          type: 'recording_finalization',
+          sessionId,
+          error: error instanceof Error ? error.message : String(error)
+        },
+        'Error finalizing recording'
+      );
     }
-    
+
     markSessionEnded(sessionId);
   }
 

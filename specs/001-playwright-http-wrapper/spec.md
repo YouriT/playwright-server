@@ -19,7 +19,7 @@
 - Q: How long should recordings be retained after session termination? → A: 1 hour
 - Q: What should happen when a client loses connection mid-command? → A: Abort command immediately
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Start Browser Session (Priority: P1)
 
@@ -103,7 +103,7 @@ As a system administrator or power user, I need to run multiple browser automati
 - Client connection loss mid-command: System immediately aborts the running command and frees resources, session remains active for new commands
 - How are browser processes cleaned up if a session terminates abnormally (crash, server restart)?
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -144,7 +144,7 @@ As a system administrator or power user, I need to run multiple browser automati
 - **Browser Context**: The underlying Patchright browser instance and page associated with a session, including browser state, cookies, and navigation history
 - **Recording**: Represents a captured session recording with playback URL, video file location (MP4/WebM format), recording start/end timestamps, and video metadata
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

@@ -1,12 +1,20 @@
 import { chromium, Browser } from 'patchright';
+import { logger } from '../utils/logger';
 
 let browserInstance: Browser | null = null;
 
 export async function getBrowser(): Promise<Browser> {
   if (!browserInstance || !browserInstance.isConnected()) {
-    console.log(`Launching browser instance in ${process.env.HEADLESS !== 'false' ? 'headless' : 'headed'} mode`);
+    const headless = process.env.HEADLESS !== 'false';
+    logger.info(
+      {
+        type: 'browser_launch',
+        mode: headless ? 'headless' : 'headed'
+      },
+      'Launching browser instance'
+    );
     browserInstance = await chromium.launch({
-      headless: process.env.HEADLESS !== 'false',
+      headless
     });
   }
   return browserInstance;
