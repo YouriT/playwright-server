@@ -8,8 +8,8 @@ dotenv.config({
 import express, { Express } from 'express';
 import path from 'path';
 import { errorHandler } from './middleware/error';
-import sessionRouter from './routes/session';
 import commandRouter from './routes/command';
+import sessionRouter from './routes/session';
 import { ensureRecordingsDirectory, startRecordingCleanupScheduler } from './services/recording';
 import { logger } from './utils/logger';
 
@@ -28,7 +28,7 @@ app.use('/sessions', sessionRouter);
 app.use('/sessions', commandRouter);
 
 // Static file serving for recordings
-const RECORDINGS_DIR = process.env.RECORDINGS_DIR || './recordings';
+const RECORDINGS_DIR = path.join(process.cwd(), process.env.RECORDINGS_DIR || './recordings');
 app.use('/recordings', express.static(path.resolve(RECORDINGS_DIR)));
 
 // Error handling middleware (must be last)

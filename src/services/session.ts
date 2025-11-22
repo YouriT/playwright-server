@@ -1,11 +1,11 @@
-import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
-import { SessionData } from '../types/session';
-import { RecordingMetadata } from '../types/recording';
-import { getBrowser } from './browser';
+import { v4 as uuidv4 } from 'uuid';
 import { MaxSessionsReachedError, SessionNotFoundError } from '../types/errors';
-import { registerRecordingSession, markSessionEnded } from './recording';
+import { RecordingMetadata } from '../types/recording';
+import { SessionData } from '../types/session';
 import { logger } from '../utils/logger';
+import { getBrowser } from './browser';
+import { markSessionEnded, registerRecordingSession } from './recording';
 
 // In-memory session store
 const sessions = new Map<string, SessionData>();
@@ -13,7 +13,7 @@ const sessions = new Map<string, SessionData>();
 // Configuration
 const MAX_CONCURRENT_SESSIONS = parseInt(process.env.MAX_CONCURRENT_SESSIONS || '10', 10);
 const PORT = process.env.PORT || 3000;
-const RECORDINGS_DIR = process.env.RECORDINGS_DIR || './recordings';
+const RECORDINGS_DIR = path.resolve(process.cwd(), process.env.RECORDINGS_DIR || './recordings');
 
 export interface CreateSessionOptions {
   ttl: number;

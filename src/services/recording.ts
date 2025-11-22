@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import path from 'path';
 import { logger } from '../utils/logger';
 
 const RECORDINGS_DIR = process.env.RECORDINGS_DIR || './recordings';
@@ -74,11 +75,12 @@ export function startRecordingCleanupScheduler(): void {
 
 export async function ensureRecordingsDirectory(): Promise<void> {
   try {
-    await fs.mkdir(RECORDINGS_DIR, { recursive: true });
+    const recordingDirPath = path.resolve(process.cwd(), RECORDINGS_DIR);
+    await fs.mkdir(recordingDirPath, { recursive: true });
     logger.info(
       {
         type: 'recordings_directory',
-        path: RECORDINGS_DIR
+        path: recordingDirPath
       },
       'Recordings directory ensured'
     );
