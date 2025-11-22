@@ -11,13 +11,12 @@ export async function getBrowser(): Promise<Browser> {
       {
         type: 'browser_launch',
         mode: headless ? 'headless' : 'headed',
-        channel: 'chrome'
+        browser: 'chromium'
       },
       'Launching browser instance'
     );
 
     browserInstance = await chromium.launch({
-      channel: 'chrome', // Required by Patchright for stealth mode
       headless
     });
   }

@@ -40,7 +40,7 @@ Create `.env` file for custom settings:
 - `HTTPS_PROXY` - Global HTTPS proxy override (optional)
 - `NO_PROXY` - Comma-separated list of hosts to bypass proxy (optional)
 
-**Note:** This server uses Patchright with Chrome browser for enhanced stealth capabilities. Chrome must be installed on the system.
+**Note:** This server uses Patchright with bundled Chromium browser for enhanced stealth capabilities.
 
 ## API Usage
 

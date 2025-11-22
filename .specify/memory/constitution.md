@@ -1,16 +1,17 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.0 → 1.2.0
-Amendment: Added Patchright browser requirement
+Version change: 1.2.0 → 1.3.0
+Amendment: Updated browser requirement from Chrome to bundled Chromium
 
 Modified principles:
-  - Updated Principle IV: Thin Playwright Wrapper to include Patchright requirement
-  - Added Technical Constraints for browser configuration
+  - Updated Principle IV: Thin Playwright Wrapper to use bundled Chromium
+  - Updated Technical Constraints for browser configuration
 
-Added sections:
-  - Patchright browser channel requirement (Chrome only)
-  - Rationale for Chrome enforcement
+Changed sections:
+  - Browser requirement: Changed from Chrome channel to bundled Chromium
+  - Removed Chrome installation requirement
+  - Updated rationale for Chromium usage
 
 Templates requiring updates:
   ✅ .specify/templates/plan-template.md (Already compatible)
@@ -61,16 +62,16 @@ Patchright library. Do not reinvent Playwright abstractions or create "improved"
 versions of Playwright concepts. Map HTTP requests to Playwright calls as
 directly as possible.
 
-**Browser Requirement**: MUST use Patchright with Chrome browser only
-(`channel: 'chrome'`). This is a hard requirement for Patchright's stealth
-capabilities and MUST NOT be made configurable.
+**Browser Requirement**: MUST use Patchright with bundled Chromium browser.
+This is a hard requirement for Patchright's stealth capabilities and MUST NOT
+be made configurable.
 
 **Rationale**:
 
 - Maintaining parity with Playwright's capabilities and avoiding duplication of effort
-- Patchright requires Chrome for optimal stealth mode and bot detection evasion
+- Patchright bundles Chromium with stealth patches for optimal bot detection evasion
 - Users should be able to reference Playwright docs directly when using this server
-- Chrome-only requirement is a Patchright best practice per official documentation
+- Bundled Chromium ensures consistent behavior across environments without external dependencies
 
 ### V. No Testing Requirements (NON-NEGOTIABLE)
 
@@ -112,14 +113,14 @@ monitoring infrastructure.
 - **Runtime**: Node.js (latest LTS recommended)
 - **Framework**: Minimal web framework (e.g., Express, Fastify, or native http)
 - **Dependencies**: Patchright + web framework + minimal utilities only
-- **Browser**: Chrome (required by Patchright, must be installed on system)
+- **Browser**: Bundled Chromium (provided by Patchright)
 
 ### Browser Configuration
 
 - **Library**: Patchright (enhanced Playwright fork)
-- **Channel**: `'chrome'` (hardcoded, NON-NEGOTIABLE)
-- **Rationale**: Patchright's stealth mode requires Chrome; other browsers not supported
-- **Documentation**: Chrome installation requirement MUST be documented in README
+- **Browser**: Bundled Chromium (hardcoded, NON-NEGOTIABLE)
+- **Rationale**: Patchright's stealth mode requires bundled Chromium; other browsers not supported
+- **Documentation**: Bundled browser requirement MUST be documented in README
 
 ### API Design
 
@@ -134,7 +135,7 @@ monitoring infrastructure.
 - Sensible defaults for all optional settings
 - No complex configuration file formats (JSON or .env only)
 - Logging configuration MUST support `LOG_LEVEL` environment variable
-- Browser channel is NOT configurable (always Chrome)
+- Browser type is NOT configurable (always bundled Chromium)
 
 ### Logging Standards
 
@@ -218,4 +219,4 @@ When this constitution is amended:
 - Review `.specify/templates/tasks-template.md` for task type categorization
 - Update any command files if agent-specific references need correction
 
-**Version**: 1.2.0 | **Ratified**: 2025-11-19 | **Last Amended**: 2025-11-22
+**Version**: 1.3.0 | **Ratified**: 2025-11-19 | **Last Amended**: 2025-11-22

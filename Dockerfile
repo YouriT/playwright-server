@@ -34,7 +34,7 @@ RUN npm ci
 
 # Install Playwright browsers early (before copying source code)
 # This layer will be cached and won't rebuild unless package.json changes
-RUN npx patchright install chrome
+RUN npx patchright install chromium
 
 # Copy source code (changes here won't invalidate browser cache)
 COPY tsconfig.json ./
