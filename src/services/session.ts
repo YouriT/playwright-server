@@ -1,4 +1,4 @@
-import { BrowserContextOptions } from 'patchright';
+import { BrowserContextOptions, chromium } from 'patchright';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { getGlobalProxy } from '../server';
@@ -7,7 +7,6 @@ import { ProxyConfig } from '../types/proxy';
 import { RecordingMetadata } from '../types/recording';
 import { SessionData } from '../types/session';
 import { logger } from '../utils/logger';
-import { getBrowser } from './browser';
 import { toPlaywrightProxy } from './proxy';
 import { markSessionEnded, registerRecordingSession } from './recording';
 
@@ -18,6 +17,7 @@ const sessions = new Map<string, SessionData>();
 const MAX_CONCURRENT_SESSIONS = parseInt(process.env.MAX_CONCURRENT_SESSIONS || '10', 10);
 const PORT = process.env.PORT || 3000;
 const RECORDINGS_DIR = process.env.RECORDINGS_DIR || './recordings';
+const USER_DATA_DIR = process.env.USER_DATA_DIR || './user-data';
 
 export interface CreateSessionOptions {
   ttl: number;
@@ -39,7 +39,8 @@ export async function createSession(options: CreateSessionOptions): Promise<Sess
   const now = new Date();
   const expiresAt = new Date(now.getTime() + options.ttl);
 
-  const browser = await getBrowser();
+  // Create unique user data directory for this session
+  const userDataDir = path.join(USER_DATA_DIR, sessionId);
 
   // Determine effective proxy configuration (session-specific > global > none)
   const effectiveProxy = options.proxy || getGlobalProxy();
@@ -92,9 +93,23 @@ export async function createSession(options: CreateSessionOptions): Promise<Sess
     registerRecordingSession(sessionId, recordingPath);
   }
 
-  // Create browser context
-  const browserContext = await browser.newContext(contextOptions);
-  await browserContext.newPage();
+  logger.info(
+    {
+      type: 'browser_launch',
+      sessionId,
+      userDataDir,
+      mode: 'headed',
+      browser: 'chrome'
+    },
+    'Launching persistent browser context'
+  );
+
+  // Launch persistent browser context with dedicated user data directory
+  const browserContext = await chromium.launchPersistentContext(userDataDir, {
+    channel: 'chrome',
+    headless: false,
+    ...contextOptions
+  });
 
   // Create session data
   const sessionData: SessionData = {
@@ -108,7 +123,8 @@ export async function createSession(options: CreateSessionOptions): Promise<Sess
       cleanupSession(sessionId);
     }, options.ttl),
     recordingMetadata,
-    proxyConfig: effectiveProxy
+    proxyConfig: effectiveProxy,
+    userDataDir
   };
 
   sessions.set(sessionId, sessionData);
@@ -170,6 +186,30 @@ export async function cleanupSession(sessionId: string): Promise<void> {
     }
 
     markSessionEnded(sessionId);
+  }
+
+  // Delete user data directory
+  try {
+    const fs = await import('fs/promises');
+    await fs.rm(session.userDataDir, { recursive: true, force: true });
+    logger.info(
+      {
+        type: 'user_data_cleanup',
+        sessionId,
+        userDataDir: session.userDataDir
+      },
+      'User data directory deleted'
+    );
+  } catch (error) {
+    logger.error(
+      {
+        type: 'user_data_cleanup',
+        sessionId,
+        userDataDir: session.userDataDir,
+        error: error instanceof Error ? error.message : String(error)
+      },
+      'Error deleting user data directory'
+    );
   }
 
   // Remove from store

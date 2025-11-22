@@ -12,4 +12,5 @@ export interface SessionData {
   timeoutHandle: NodeJS.Timeout;
   recordingMetadata: RecordingMetadata | null;
   proxyConfig: ProxyConfig | null;
+  userDataDir: string;
 }
