@@ -6,6 +6,7 @@ import {
   TimeoutError,
   ElementNotFoundError,
   MaxSessionsReachedError,
+  ProxyValidationError,
   CommandError
 } from '../types/errors';
 
@@ -18,6 +19,7 @@ export function errorHandler(
   // Map error types to HTTP status codes
   let statusCode = 500;
   let errorType = 'ExecutionError';
+  let details: any = undefined;
 
   if (error instanceof SessionNotFoundError) {
     statusCode = 404;
@@ -28,6 +30,11 @@ export function errorHandler(
   } else if (error instanceof ValidationError) {
     statusCode = 400;
     errorType = 'ValidationError';
+  } else if (error instanceof ProxyValidationError) {
+    statusCode = 400;
+    errorType = 'ProxyValidationError';
+    // Include validation details for proxy errors
+    details = error.details;
   } else if (error instanceof TimeoutError) {
     statusCode = 408;
     errorType = 'TimeoutError';
@@ -42,7 +49,7 @@ export function errorHandler(
   const errorResponse: CommandError = {
     type: errorType,
     message: error.message,
-    details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    details: details || (process.env.NODE_ENV === 'development' ? error.stack : undefined)
   };
 
   res.status(statusCode).json(errorResponse);

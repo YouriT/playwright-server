@@ -1,4 +1,4 @@
-import { chromium, Browser } from 'patchright';
+import { Browser, chromium } from 'patchright';
 import { logger } from '../utils/logger';
 
 let browserInstance: Browser | null = null;
@@ -14,6 +14,7 @@ export async function getBrowser(): Promise<Browser> {
       'Launching browser instance'
     );
     browserInstance = await chromium.launch({
+      channel: 'chrome',
       headless
     });
   }

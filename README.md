@@ -12,6 +12,7 @@ A lightweight HTTP server that wraps Playwright (via Patchright) functionality, 
 - **Video Recording**: Optional session recording with automatic cleanup
 - **Concurrent Sessions**: Support for multiple simultaneous browser sessions
 - **Automatic Cleanup**: TTL-based session expiration and resource management
+- **Proxy Support**: Route browser traffic through HTTP, HTTPS, or SOCKS5 proxies with optional authentication
 
 ## Quick Start
 
@@ -34,6 +35,9 @@ Create `.env` file for custom settings:
 - `MAX_CONCURRENT_SESSIONS` - Max concurrent sessions (default: 10)
 - `RECORDINGS_DIR` - Recording directory (default: ./recordings)
 - `LOG_LEVEL` - info, debug, error (default: info)
+- `HTTP_PROXY` - Global HTTP/HTTPS proxy (optional)
+- `HTTPS_PROXY` - Global HTTPS proxy override (optional)
+- `NO_PROXY` - Comma-separated list of hosts to bypass proxy (optional)
 
 ## API Usage
 
@@ -95,6 +99,62 @@ Supports multiple sessions (default: 10) with isolated contexts. List active ses
 ```bash
 curl http://localhost:3000/sessions
 ```
+
+## Proxy Configuration
+
+Route browser traffic through HTTP, HTTPS, or SOCKS5 proxies.
+
+### Global Proxy (Environment Variables)
+
+Set via environment variables to apply to all sessions by default:
+
+```bash
+# HTTP/HTTPS proxy
+export HTTP_PROXY="http://proxy.example.com:8080"
+
+# With authentication
+export HTTP_PROXY="http://username:password@proxy.example.com:8080"
+
+# SOCKS5 proxy
+export HTTP_PROXY="socks5://proxy.example.com:1080"
+
+# Bypass proxy for specific hosts
+export NO_PROXY="localhost,127.0.0.1,.example.com"
+```
+
+### Per-Session Proxy (API)
+
+Override global proxy for specific sessions:
+
+```bash
+# HTTP proxy with authentication
+curl -X POST http://localhost:3000/sessions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ttl": 1800000,
+    "proxy": {
+      "server": "proxy.example.com:8080",
+      "username": "user",
+      "password": "pass"
+    }
+  }'
+
+# SOCKS5 proxy without authentication
+curl -X POST http://localhost:3000/sessions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ttl": 1800000,
+    "proxy": {
+      "server": "socks5://proxy.example.com:1080"
+    }
+  }'
+```
+
+**Supported protocols:** `http://`, `https://`, `socks5://`
+
+**Priority:** Per-session proxy > Global proxy > Direct connection
+
+**Note:** Proxy credentials are automatically redacted from logs for security.
 
 ## License
 

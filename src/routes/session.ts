@@ -6,14 +6,16 @@ import {
   getAllSessions,
   CreateSessionOptions
 } from '../services/session';
-import { ValidationError } from '../types/errors';
+import { ValidationError, ProxyValidationError } from '../types/errors';
+import { parseProxyRequest, validateProxyConfigOrThrow } from '../services/proxy';
+import { ProxyRequestConfig } from '../types/proxy';
 
 const router = Router();
 
 // POST /sessions - Create new session
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { ttl, recording, videoSize } = req.body;
+    const { ttl, recording, videoSize, proxy } = req.body;
 
     // Validate TTL
     if (!ttl || typeof ttl !== 'number') {
@@ -29,6 +31,35 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       recording: recording || false,
       videoSize
     };
+
+    // Parse and validate proxy configuration if provided
+    if (proxy) {
+      try {
+        // Validate proxy has required server field
+        if (!proxy.server || typeof proxy.server !== 'string') {
+          throw new ProxyValidationError('Proxy server URL is required', [
+            'Proxy configuration must include a "server" field with a valid URL'
+          ]);
+        }
+
+        // Parse proxy configuration (supports both URL format and separate fields)
+        const proxyConfig = parseProxyRequest(proxy as ProxyRequestConfig);
+
+        // Validate parsed configuration
+        validateProxyConfigOrThrow(proxyConfig);
+
+        // Add to session options
+        options.proxy = proxyConfig;
+      } catch (error) {
+        // Re-throw ProxyValidationError as-is, wrap other errors
+        if (error instanceof ProxyValidationError) {
+          throw error;
+        }
+        throw new ProxyValidationError('Invalid proxy configuration', [
+          error instanceof Error ? error.message : String(error)
+        ]);
+      }
+    }
 
     const session = await createSession(options);
 

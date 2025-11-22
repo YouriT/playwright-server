@@ -1,5 +1,6 @@
 import { BrowserContext } from 'patchright';
 import { RecordingMetadata } from './recording';
+import { ProxyConfig } from './proxy';
 
 export interface SessionData {
   id: string;
@@ -10,4 +11,5 @@ export interface SessionData {
   browserContext: BrowserContext;
   timeoutHandle: NodeJS.Timeout;
   recordingMetadata: RecordingMetadata | null;
+  proxyConfig: ProxyConfig | null;
 }

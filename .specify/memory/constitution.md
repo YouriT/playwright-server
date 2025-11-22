@@ -89,6 +89,7 @@ efficient troubleshooting and performance analysis without requiring complex
 monitoring infrastructure.
 
 **Requirements**:
+
 - Use Pino (or equivalent structured logger) with JSON output
 - Include correlation IDs to trace related operations
 - Measure and log operation timing with millisecond precision

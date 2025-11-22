@@ -1,11 +1,15 @@
-import { v4 as uuidv4 } from 'uuid';
+import { BrowserContextOptions } from 'patchright';
 import path from 'path';
-import { SessionData } from '../types/session';
-import { RecordingMetadata } from '../types/recording';
-import { getBrowser } from './browser';
+import { v4 as uuidv4 } from 'uuid';
+import { getGlobalProxy } from '../server';
 import { MaxSessionsReachedError, SessionNotFoundError } from '../types/errors';
-import { registerRecordingSession, markSessionEnded } from './recording';
+import { ProxyConfig } from '../types/proxy';
+import { RecordingMetadata } from '../types/recording';
+import { SessionData } from '../types/session';
 import { logger } from '../utils/logger';
+import { getBrowser } from './browser';
+import { toPlaywrightProxy } from './proxy';
+import { markSessionEnded, registerRecordingSession } from './recording';
 
 // In-memory session store
 const sessions = new Map<string, SessionData>();
@@ -22,6 +26,7 @@ export interface CreateSessionOptions {
     width: number;
     height: number;
   };
+  proxy?: ProxyConfig;
 }
 
 export async function createSession(options: CreateSessionOptions): Promise<SessionData> {
@@ -36,11 +41,37 @@ export async function createSession(options: CreateSessionOptions): Promise<Sess
 
   const browser = await getBrowser();
 
+  // Determine effective proxy configuration (session-specific > global > none)
+  const effectiveProxy = options.proxy || getGlobalProxy();
+
   // Setup recording if enabled
   let recordingMetadata: RecordingMetadata | null = null;
-  const contextOptions: any = {
-    viewport: { width: 1920, height: 1080 }
+  const contextOptions: BrowserContextOptions = {
+    viewport: { width: 1920, height: 1080 },
+    ignoreHTTPSErrors: true
   };
+
+  // Add proxy configuration if available
+  if (effectiveProxy) {
+    contextOptions.proxy = toPlaywrightProxy(effectiveProxy);
+
+    // Log proxy usage (credentials will be redacted)
+    logger.info(
+      {
+        type: 'session_proxy',
+        sessionId,
+        proxyConfig: {
+          protocol: effectiveProxy.protocol,
+          hostname: effectiveProxy.hostname,
+          port: effectiveProxy.port,
+          hasAuth: !!(effectiveProxy.username && effectiveProxy.password),
+          bypass: effectiveProxy.bypass
+        },
+        source: options.proxy ? 'session-specific' : 'global'
+      },
+      'Session created with proxy configuration'
+    );
+  }
 
   if (options.recording) {
     const recordingPath = path.join(RECORDINGS_DIR, sessionId);
@@ -76,7 +107,8 @@ export async function createSession(options: CreateSessionOptions): Promise<Sess
     timeoutHandle: setTimeout(() => {
       cleanupSession(sessionId);
     }, options.ttl),
-    recordingMetadata
+    recordingMetadata,
+    proxyConfig: effectiveProxy
   };
 
   sessions.set(sessionId, sessionData);
