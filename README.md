@@ -84,11 +84,62 @@ curl -X DELETE http://localhost:3000/sessions/{sessionId}
 
 ## Available Commands
 
-**Navigation**: `navigate`, `goto`  
-**Interaction**: `click`, `type`, `fill`, `press`  
-**Extraction**: `textContent`, `getAttribute`, `screenshot`, `evaluate`  
-**Timing**: `waitForSelector`  
-**State**: `cookies`, `setCookies`, `setExtraHTTPHeaders`
+### Navigation
+
+- `navigate`, `goto` - Navigate to URL
+- `reload` - Reload current page
+- `goBack` - Navigate back in history
+- `goForward` - Navigate forward in history
+- `waitForLoadState` - Wait for specific load state
+
+### Element Interaction
+
+- `click` - Click element
+- `dblclick` - Double-click element
+- `type`, `fill` - Fill input with text
+- `press` - Press keyboard key
+- `hover` - Hover over element
+- `check` - Check checkbox/radio
+- `uncheck` - Uncheck checkbox
+- `selectOption` - Select dropdown option
+- `dragAndDrop` - Drag element to target
+
+### Element State Checking
+
+- `isVisible` - Check if element is visible
+- `isHidden` - Check if element is hidden
+- `isEnabled` - Check if element is enabled
+- `isDisabled` - Check if element is disabled
+- `isEditable` - Check if element is editable
+- `isChecked` - Check if checkbox/radio is checked
+
+### Content Retrieval
+
+- `textContent` - Get element text content
+- `innerHTML` - Get element inner HTML
+- `innerText` - Get element inner text
+- `inputValue` - Get input value
+- `getAttribute` - Get element attribute
+- `title` - Get page title
+- `url` - Get current URL
+- `content` - Get full page HTML
+- `screenshot` - Take page screenshot
+- `cookies` - Get all cookies
+
+### Page Manipulation
+
+- `waitForSelector` - Wait for element to appear
+- `evaluate` - Execute JavaScript in page
+- `setExtraHTTPHeaders` - Set custom HTTP headers
+- `setCookies` - Set cookies
+
+### Utility
+
+- `wait` - Wait for duration (ms)
+- `bringToFront` - Activate page/tab
+- `focus` - Focus on element
+- `blur` - Remove focus from element
+- `scrollIntoViewIfNeeded` - Scroll element into view
 
 ## Session Recording
 

@@ -32,6 +32,12 @@ const commandRegistry: Record<string, CommandHandler> = {
     return null;
   },
 
+  reload: async (page: Page, params: any) => {
+    const { waitUntil } = params || {};
+    await page.reload({ waitUntil: waitUntil || 'load' });
+    return null;
+  },
+
   // Element interaction commands
   click: async (page: Page, params: any) => {
     const { selector, options } = params;
@@ -121,6 +127,161 @@ const commandRegistry: Record<string, CommandHandler> = {
   setCookies: async (page: Page, params: any) => {
     const { cookies } = params;
     await page.context().addCookies(cookies);
+    return null;
+  },
+
+  // Timing commands
+  wait: async (_page: Page, params: any) => {
+    const { duration } = params;
+    if (!duration || typeof duration !== 'number' || duration < 0) {
+      throw new Error('Duration must be a positive number in milliseconds');
+    }
+    await new Promise((resolve) => setTimeout(resolve, duration));
+    return null;
+  },
+
+  goBack: async (page: Page, params: any) => {
+    const { waitUntil } = params || {};
+    await page.goBack({ waitUntil: waitUntil || 'load' });
+    return null;
+  },
+
+  goForward: async (page: Page, params: any) => {
+    const { waitUntil } = params || {};
+    await page.goForward({ waitUntil: waitUntil || 'load' });
+    return null;
+  },
+
+  waitForLoadState: async (page: Page, params: any) => {
+    const { state, timeout } = params || {};
+    await page.waitForLoadState(state || 'load', { timeout });
+    return null;
+  },
+
+  // Element state checking commands
+  isVisible: async (page: Page, params: any) => {
+    const { selector } = params;
+    const isVisible = await page.locator(selector).isVisible();
+    return isVisible;
+  },
+
+  isHidden: async (page: Page, params: any) => {
+    const { selector } = params;
+    const isHidden = await page.locator(selector).isHidden();
+    return isHidden;
+  },
+
+  isEnabled: async (page: Page, params: any) => {
+    const { selector } = params;
+    const isEnabled = await page.locator(selector).isEnabled();
+    return isEnabled;
+  },
+
+  isDisabled: async (page: Page, params: any) => {
+    const { selector } = params;
+    const isDisabled = await page.locator(selector).isDisabled();
+    return isDisabled;
+  },
+
+  isEditable: async (page: Page, params: any) => {
+    const { selector } = params;
+    const isEditable = await page.locator(selector).isEditable();
+    return isEditable;
+  },
+
+  isChecked: async (page: Page, params: any) => {
+    const { selector } = params;
+    const isChecked = await page.locator(selector).isChecked();
+    return isChecked;
+  },
+
+  // Advanced interaction commands
+  hover: async (page: Page, params: any) => {
+    const { selector, options } = params;
+    await page.locator(selector).hover(options);
+    return null;
+  },
+
+  dblclick: async (page: Page, params: any) => {
+    const { selector, options } = params;
+    await page.locator(selector).dblclick(options);
+    return null;
+  },
+
+  dragAndDrop: async (page: Page, params: any) => {
+    const { sourceSelector, targetSelector, options } = params;
+    await page.locator(sourceSelector).dragTo(page.locator(targetSelector), options);
+    return null;
+  },
+
+  selectOption: async (page: Page, params: any) => {
+    const { selector, values, options } = params;
+    await page.locator(selector).selectOption(values, options);
+    return null;
+  },
+
+  check: async (page: Page, params: any) => {
+    const { selector, options } = params;
+    await page.locator(selector).check(options);
+    return null;
+  },
+
+  uncheck: async (page: Page, params: any) => {
+    const { selector, options } = params;
+    await page.locator(selector).uncheck(options);
+    return null;
+  },
+
+  // Content retrieval commands
+  innerHTML: async (page: Page, params: any) => {
+    const { selector } = params;
+    const html = await page.locator(selector).innerHTML();
+    return html;
+  },
+
+  innerText: async (page: Page, params: any) => {
+    const { selector } = params;
+    const text = await page.locator(selector).innerText();
+    return text;
+  },
+
+  inputValue: async (page: Page, params: any) => {
+    const { selector } = params;
+    const value = await page.locator(selector).inputValue();
+    return value;
+  },
+
+  title: async (page: Page, _params: any) => {
+    const title = await page.title();
+    return title;
+  },
+
+  url: async (page: Page, _params: any) => {
+    const url = page.url();
+    return url;
+  },
+
+  // Utility commands
+  bringToFront: async (page: Page, _params: any) => {
+    await page.bringToFront();
+    return null;
+  },
+
+  focus: async (page: Page, params: any) => {
+    const { selector } = params;
+    await page.locator(selector).focus();
+    return null;
+  },
+
+  blur: async (page: Page, params: any) => {
+    const { selector } = params;
+    await page.locator(selector).blur();
+    return null;
+  },
+
+  scrollIntoViewIfNeeded: async (page: Page, params: any) => {
+    const { selector, options } = params;
+    await page.locator(selector).scrollIntoViewIfNeeded(options);
     return null;
   }
 };
@@ -230,7 +391,7 @@ export async function executeCommandSequence(
         index,
         command: cmd.command,
         status: 'success',
-        result,
+        result: result === undefined ? null : result,
         durationMs,
         ...(cmd.selector && { selector: cmd.selector })
       };

@@ -110,8 +110,6 @@ export async function createSession(options: CreateSessionOptions): Promise<Sess
     channel: 'chrome',
     headless: false,
     args: [
-      // Disable automation detection
-      '--disable-blink-features=AutomationControlled',
       // Disable crash reporting (Chrome 128+ requires crashpad directories or this flag)
       '--disable-breakpad',
       '--no-crash-upload',
