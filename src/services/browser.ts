@@ -17,7 +17,8 @@ export async function getBrowser(): Promise<Browser> {
     );
 
     browserInstance = await chromium.launch({
-      headless
+      channel: 'chrome',
+      headless: false
     });
   }
   return browserInstance;

@@ -1,18 +1,18 @@
 import { Page } from 'patchright';
-import { getSession } from './session';
 import {
-  CommandNotFoundError,
-  TimeoutError,
-  ElementNotFoundError,
-  ExecutionError
-} from '../types/errors';
-import {
-  CommandRequest,
   CommandExecutionResult,
+  CommandRequest,
   SequenceExecutionResponse,
   SessionLogEntry
 } from '../types/command';
+import {
+  CommandNotFoundError,
+  ElementNotFoundError,
+  ExecutionError,
+  TimeoutError
+} from '../types/errors';
 import { logCommandExecution, sanitizeParams } from '../utils/logger';
+import { getSession } from './session';
 
 // Command handler type
 type CommandHandler = (page: Page, params: any) => Promise<any>;
@@ -84,8 +84,11 @@ const commandRegistry: Record<string, CommandHandler> = {
   },
 
   evaluate: async (page: Page, params: any) => {
-    const { script } = params;
-    const result = await page.evaluate(script);
+    const { script, args } = params;
+
+    // Use Patchright's native evaluate with args and isolated context
+    // Third parameter (true) runs in isolated context
+    const result = await page.evaluate(script, args, true);
     return result;
   },
 

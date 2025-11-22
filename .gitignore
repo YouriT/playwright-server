@@ -39,3 +39,6 @@ quicktest/
 
 # Temporary files
 *.tmp
+
+# Local proxy
+local-proxy/
