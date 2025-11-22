@@ -23,40 +23,47 @@ Build an HTTP web server that wraps Playwright (via Patchright) functionality, e
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### Principle I: Simplicity First ✅
+
 - **Compliance**: PASS
 - **Rationale**: Feature is a thin HTTP wrapper over Patchright with minimal abstractions. Session management uses simple in-memory store. No complex patterns introduced unnecessarily.
 
 ### Principle II: TypeScript Foundation ✅
+
 - **Compliance**: PASS
 - **Rationale**: Project will be TypeScript with strict mode enabled. Type complexity kept minimal with simple interfaces for Session, Command, Recording entities.
 
 ### Principle III: HTTP-First Interface ✅
+
 - **Compliance**: PASS
 - **Rationale**: Core design is RESTful HTTP endpoints for all operations. JSON payloads for commands. Intuitive URL structure (session URLs, stop URLs, playback URLs).
 
 ### Principle IV: Thin Playwright Wrapper ✅
+
 - **Compliance**: PASS
 - **Rationale**: Commands map directly to Patchright/Playwright methods via direct method mapping format: `{"command": "click", "selector": "#button", "options": {}}`. No custom abstractions over Playwright API.
 
 ### Principle V: No Testing Requirements ✅
+
 - **Compliance**: PASS
 - **Rationale**: No tests required per constitution. Specification includes user scenarios for manual validation. TypeScript strict mode provides compile-time safety.
 
 ### Overall Assessment: ✅ PASS
+
 All constitutional principles are satisfied. No violations requiring justification. Ready to proceed to Phase 0 research.
 
 ---
 
 ## Post-Design Constitution Re-evaluation
 
-*Phase 1 design complete. Re-evaluating constitution compliance.*
+_Phase 1 design complete. Re-evaluating constitution compliance._
 
 ### Principle I: Simplicity First ✅
+
 - **Compliance**: PASS (Confirmed)
-- **Design Review**: 
+- **Design Review**:
   - Express framework chosen (minimal dependencies, simple API)
   - Command-Strategy pattern with Map-based session store
   - Per-session setTimeout timers for TTL management
@@ -65,6 +72,7 @@ All constitutional principles are satisfied. No violations requiring justificati
   - All decisions prioritize simplicity over theoretical perfection
 
 ### Principle II: TypeScript Foundation ✅
+
 - **Compliance**: PASS (Confirmed)
 - **Design Review**:
   - Data model uses simple interfaces: Session, Command, RecordingMetadata, CommandError
@@ -73,6 +81,7 @@ All constitutional principles are satisfied. No violations requiring justificati
   - TypeScript strict mode will catch edge cases at compile time
 
 ### Principle III: HTTP-First Interface ✅
+
 - **Compliance**: PASS (Confirmed)
 - **Design Review**:
   - RESTful API with intuitive endpoints: POST /sessions, POST /sessions/:id/command, DELETE /sessions/:id
@@ -81,6 +90,7 @@ All constitutional principles are satisfied. No violations requiring justificati
   - Human-readable error messages in all error responses
 
 ### Principle IV: Thin Playwright Wrapper ✅
+
 - **Compliance**: PASS (Confirmed)
 - **Design Review**:
   - Direct mapping of HTTP commands to Playwright methods via CommandRegistry
@@ -89,6 +99,7 @@ All constitutional principles are satisfied. No violations requiring justificati
   - Users can reference Playwright documentation directly for command usage
 
 ### Principle V: No Testing Requirements ✅
+
 - **Compliance**: PASS (Confirmed)
 - **Design Review**:
   - No test files in project structure
@@ -97,6 +108,7 @@ All constitutional principles are satisfied. No violations requiring justificati
   - QuickStart guide enables manual testing of all endpoints
 
 ### Final Assessment: ✅ ALL GATES PASSED
+
 Design phase complete. All constitutional principles satisfied. No violations. No complexity justifications required. Ready for Phase 2 (implementation tasks breakdown).
 
 ## Project Structure

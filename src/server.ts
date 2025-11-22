@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 dotenv.config({
   quiet: true,
-  path: '.env.local',
+  path: '.env.local'
 });
 
 import express, { Express } from 'express';
@@ -10,10 +10,8 @@ import path from 'path';
 import { errorHandler } from './middleware/error';
 import sessionRouter from './routes/session';
 import commandRouter from './routes/command';
-import {
-  ensureRecordingsDirectory,
-  startRecordingCleanupScheduler,
-} from './services/recording';
+import { ensureRecordingsDirectory, startRecordingCleanupScheduler } from './services/recording';
+import { logger } from './utils/logger';
 
 const app: Express = express();
 
@@ -41,8 +39,13 @@ function validateEnvironment(): void {
   const port = process.env.PORT || '3000';
   const portNum = parseInt(port, 10);
   if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
-    console.warn(
-      `Invalid PORT value "${port}". Using default port 3000.`
+    logger.warn(
+      {
+        type: 'config_validation',
+        field: 'PORT',
+        value: port
+      },
+      'Invalid PORT value, using default 3000'
     );
     process.env.PORT = '3000';
   }
@@ -50,8 +53,13 @@ function validateEnvironment(): void {
   const maxSessions = process.env.MAX_CONCURRENT_SESSIONS || '10';
   const maxSessionsNum = parseInt(maxSessions, 10);
   if (isNaN(maxSessionsNum) || maxSessionsNum < 1) {
-    console.warn(
-      `Invalid MAX_CONCURRENT_SESSIONS value "${maxSessions}". Using default value 10.`
+    logger.warn(
+      {
+        type: 'config_validation',
+        field: 'MAX_CONCURRENT_SESSIONS',
+        value: maxSessions
+      },
+      'Invalid MAX_CONCURRENT_SESSIONS value, using default 10'
     );
     process.env.MAX_CONCURRENT_SESSIONS = '10';
   }
@@ -71,9 +79,15 @@ async function startServer() {
   startRecordingCleanupScheduler();
 
   app.listen(PORT, () => {
-    console.log(`Playwright HTTP Wrapper server listening on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/health`);
-    console.log(`Max concurrent sessions: ${process.env.MAX_CONCURRENT_SESSIONS || 10}`);
+    logger.info(
+      {
+        type: 'server_start',
+        port: PORT,
+        maxConcurrentSessions: process.env.MAX_CONCURRENT_SESSIONS || 10,
+        healthCheck: `http://localhost:${PORT}/health`
+      },
+      'Playwright HTTP Wrapper server started'
+    );
   });
 }
 

@@ -1,7 +1,7 @@
 # Quickstart Guide: Playwright HTTP Wrapper
 
 **Feature Branch**: `001-playwright-http-wrapper`  
-**Date**: 2025-11-19  
+**Date**: 2025-11-19
 
 This guide will help you quickly get started with the Playwright HTTP Wrapper API.
 
@@ -28,6 +28,7 @@ This guide will help you quickly get started with the Playwright HTTP Wrapper AP
 ### 1. Create a New Session
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:3000/sessions \
   -H "Content-Type: application/json" \
@@ -38,6 +39,7 @@ curl -X POST http://localhost:3000/sessions \
 ```
 
 **Response:**
+
 ```json
 {
   "sessionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
@@ -55,6 +57,7 @@ Save the `sessionUrl` and `stopUrl` for subsequent requests.
 ### 2. Navigate to a Website
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/command \
   -H "Content-Type: application/json" \
@@ -68,6 +71,7 @@ curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 **Response:**
+
 ```json
 {
   "result": null,
@@ -80,6 +84,7 @@ curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ### 3. Extract Text from an Element
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/command \
   -H "Content-Type: application/json" \
@@ -90,6 +95,7 @@ curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 **Response:**
+
 ```json
 {
   "result": "Example Domain",
@@ -102,6 +108,7 @@ curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ### 4. Click a Button
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/command \
   -H "Content-Type: application/json" \
@@ -115,6 +122,7 @@ curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 **Response:**
+
 ```json
 {
   "result": null,
@@ -127,6 +135,7 @@ curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ### 5. Type Text into an Input Field
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/command \
   -H "Content-Type: application/json" \
@@ -140,6 +149,7 @@ curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 **Response:**
+
 ```json
 {
   "result": null,
@@ -152,6 +162,7 @@ curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ### 6. Take a Screenshot
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/command \
   -H "Content-Type: application/json" \
@@ -164,6 +175,7 @@ curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 **Response:**
+
 ```json
 {
   "result": "iVBORw0KGgoAAAANSUhEUg... (base64 encoded image data)",
@@ -176,11 +188,13 @@ curl -X POST http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ### 7. Stop the Session
 
 **Request:**
+
 ```bash
 curl -X DELETE http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Session terminated successfully"
@@ -194,6 +208,7 @@ curl -X DELETE http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef12345678
 To enable video recording, set `recording: true` when creating a session:
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:3000/sessions \
   -H "Content-Type: application/json" \
@@ -208,6 +223,7 @@ curl -X POST http://localhost:3000/sessions \
 ```
 
 **Response:**
+
 ```json
 {
   "sessionId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
@@ -220,6 +236,7 @@ curl -X POST http://localhost:3000/sessions \
 ```
 
 **Access the recording** after the session ends:
+
 ```bash
 curl http://localhost:3000/recordings/b2c3d4e5-f6a7-8901-bcde-f12345678901/video.webm \
   --output session-recording.webm
@@ -232,6 +249,7 @@ Recordings are available for 1 hour after session termination.
 ## Available Commands
 
 ### Navigation
+
 - `navigate` / `goto`: Navigate to a URL
   ```json
   {
@@ -244,7 +262,9 @@ Recordings are available for 1 hour after session termination.
   ```
 
 ### Element Interaction
+
 - `click`: Click an element
+
   ```json
   {
     "command": "click",
@@ -257,6 +277,7 @@ Recordings are available for 1 hour after session termination.
   ```
 
 - `type` / `fill`: Type text into an input
+
   ```json
   {
     "command": "type",
@@ -278,7 +299,9 @@ Recordings are available for 1 hour after session termination.
   ```
 
 ### Data Extraction
+
 - `textContent`: Get text content of an element
+
   ```json
   {
     "command": "textContent",
@@ -287,6 +310,7 @@ Recordings are available for 1 hour after session termination.
   ```
 
 - `getAttribute`: Get an attribute value
+
   ```json
   {
     "command": "getAttribute",
@@ -308,7 +332,9 @@ Recordings are available for 1 hour after session termination.
   ```
 
 ### Page Manipulation
+
 - `waitForSelector`: Wait for an element to appear
+
   ```json
   {
     "command": "waitForSelector",
@@ -334,6 +360,7 @@ Recordings are available for 1 hour after session termination.
 ## Error Handling
 
 ### Session Not Found (404)
+
 ```json
 {
   "error": "SessionNotFoundError",
@@ -344,6 +371,7 @@ Recordings are available for 1 hour after session termination.
 **Cause**: Session ID is invalid, session expired, or was already terminated.
 
 ### Invalid Command (400)
+
 ```json
 {
   "error": "CommandNotFoundError",
@@ -354,6 +382,7 @@ Recordings are available for 1 hour after session termination.
 **Cause**: Command name not recognized by the system.
 
 ### Element Not Found (404)
+
 ```json
 {
   "error": "ElementNotFoundError",
@@ -364,6 +393,7 @@ Recordings are available for 1 hour after session termination.
 **Cause**: Selector did not match any elements on the page.
 
 ### Timeout (408)
+
 ```json
 {
   "error": "TimeoutError",
@@ -374,6 +404,7 @@ Recordings are available for 1 hour after session termination.
 **Cause**: Command took longer than 30 seconds to execute (Playwright default timeout).
 
 ### Execution Error (500)
+
 ```json
 {
   "error": "ExecutionError",
@@ -384,6 +415,7 @@ Recordings are available for 1 hour after session termination.
 **Cause**: Browser crashed or command execution failed due to internal error.
 
 ### Maximum Sessions Reached (503)
+
 ```json
 {
   "error": "MaxSessionsReached",
@@ -409,6 +441,7 @@ Recordings are available for 1 hour after session termination.
 ## Programming Language Examples
 
 ### Python (using requests)
+
 ```python
 import requests
 
@@ -438,13 +471,14 @@ requests.delete(session['stopUrl'])
 ```
 
 ### JavaScript (using fetch)
+
 ```javascript
 // Create session
 const session = await fetch('http://localhost:3000/sessions', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ ttl: 1800000, recording: false })
-}).then(r => r.json());
+}).then((r) => r.json());
 
 const sessionUrl = session.sessionUrl;
 
@@ -466,7 +500,7 @@ const result = await fetch(sessionUrl, {
     command: 'textContent',
     selector: 'h1'
   })
-}).then(r => r.json());
+}).then((r) => r.json());
 
 console.log(result.result); // "Example Domain"
 
@@ -475,6 +509,7 @@ await fetch(session.stopUrl, { method: 'DELETE' });
 ```
 
 ### Go (using net/http)
+
 ```go
 package main
 
@@ -490,11 +525,11 @@ func main() {
     body := map[string]interface{}{"ttl": 1800000, "recording": false}
     bodyBytes, _ := json.Marshal(body)
     resp, _ := http.Post("http://localhost:3000/sessions", "application/json", bytes.NewReader(bodyBytes))
-    
+
     var session map[string]interface{}
     json.NewDecoder(resp.Body).Decode(&session)
     sessionUrl := session["sessionUrl"].(string)
-    
+
     // Navigate to website
     cmd := map[string]interface{}{
         "command": "navigate",
@@ -502,7 +537,7 @@ func main() {
     }
     cmdBytes, _ := json.Marshal(cmd)
     http.Post(sessionUrl, "application/json", bytes.NewReader(cmdBytes))
-    
+
     // Extract text
     textCmd := map[string]interface{}{
         "command": "textContent",
@@ -510,11 +545,11 @@ func main() {
     }
     textBytes, _ := json.Marshal(textCmd)
     resp, _ = http.Post(sessionUrl, "application/json", bytes.NewReader(textBytes))
-    
+
     var result map[string]interface{}
     json.NewDecoder(resp.Body).Decode(&result)
     fmt.Println(result["result"]) // "Example Domain"
-    
+
     // Stop session
     req, _ := http.NewRequest("DELETE", session["stopUrl"].(string), nil)
     http.DefaultClient.Do(req)

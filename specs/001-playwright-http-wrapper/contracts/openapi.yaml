@@ -76,8 +76,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
-                error: "MaxSessionsReached"
-                message: "Maximum concurrent sessions limit reached (10). Please try again later."
+                error: 'MaxSessionsReached'
+                message: 'Maximum concurrent sessions limit reached (10). Please try again later.'
 
   /sessions/{sessionId}:
     delete:
@@ -100,7 +100,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Session terminated successfully"
+                    example: 'Session terminated successfully'
         '404':
           $ref: '#/components/responses/SessionNotFound'
 
@@ -125,33 +125,33 @@ paths:
               navigate:
                 summary: Navigate to URL
                 value:
-                  command: "navigate"
+                  command: 'navigate'
                   options:
-                    url: "https://example.com"
-                    waitUntil: "networkidle"
+                    url: 'https://example.com'
+                    waitUntil: 'networkidle'
               click:
                 summary: Click element
                 value:
-                  command: "click"
-                  selector: "#submit-button"
+                  command: 'click'
+                  selector: '#submit-button'
                   options:
-                    button: "left"
+                    button: 'left'
               type:
                 summary: Type text
                 value:
-                  command: "type"
-                  selector: "#username"
+                  command: 'type'
+                  selector: '#username'
                   options:
-                    text: "testuser"
+                    text: 'testuser'
               textContent:
                 summary: Extract text content
                 value:
-                  command: "textContent"
-                  selector: "h1"
+                  command: 'textContent'
+                  selector: 'h1'
               screenshot:
                 summary: Take screenshot
                 value:
-                  command: "screenshot"
+                  command: 'screenshot'
                   options:
                     fullPage: true
       responses:
@@ -165,18 +165,18 @@ paths:
                 textContent:
                   summary: Text extraction result
                   value:
-                    result: "Welcome to Example Domain"
-                    executedAt: "2025-11-19T10:30:45.123Z"
+                    result: 'Welcome to Example Domain'
+                    executedAt: '2025-11-19T10:30:45.123Z'
                 click:
                   summary: Click action result
                   value:
                     result: null
-                    executedAt: "2025-11-19T10:30:45.123Z"
+                    executedAt: '2025-11-19T10:30:45.123Z'
                 screenshot:
                   summary: Screenshot result
                   value:
-                    result: "iVBORw0KGgoAAAANSUhEUg... (base64 encoded image data)"
-                    executedAt: "2025-11-19T10:30:45.123Z"
+                    result: 'iVBORw0KGgoAAAANSUhEUg... (base64 encoded image data)'
+                    executedAt: '2025-11-19T10:30:45.123Z'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -188,8 +188,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
-                error: "TimeoutError"
-                message: "Command execution exceeded timeout (30000ms)"
+                error: 'TimeoutError'
+                message: 'Command execution exceeded timeout (30000ms)'
         '500':
           description: Command execution failed
           content:
@@ -197,8 +197,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
-                error: "ExecutionError"
-                message: "Browser context closed unexpectedly"
+                error: 'ExecutionError'
+                message: 'Browser context closed unexpectedly'
 
   /recordings/{sessionId}/video.webm:
     get:
@@ -242,8 +242,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
-                error: "RecordingNotFound"
-                message: "Recording not found for session or retention period expired"
+                error: 'RecordingNotFound'
+                message: 'Recording not found for session or retention period expired'
 
 components:
   parameters:
@@ -268,32 +268,32 @@ components:
         sessionId:
           type: string
           format: uuid
-          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
         sessionUrl:
           type: string
           format: uri
           description: URL to execute commands on this session
-          example: "http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/command"
+          example: 'http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/command'
         stopUrl:
           type: string
           format: uri
           description: URL to terminate this session
-          example: "http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          example: 'http://localhost:3000/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890'
         playbackUrl:
           type: string
           format: uri
           description: URL to access the recording (only present if recording enabled)
-          example: "http://localhost:3000/recordings/a1b2c3d4-e5f6-7890-abcd-ef1234567890/video.webm"
+          example: 'http://localhost:3000/recordings/a1b2c3d4-e5f6-7890-abcd-ef1234567890/video.webm'
         expiresAt:
           type: string
           format: date-time
           description: ISO 8601 timestamp when session will expire
-          example: "2025-11-19T11:00:00.000Z"
+          example: '2025-11-19T11:00:00.000Z'
         createdAt:
           type: string
           format: date-time
           description: ISO 8601 timestamp when session was created
-          example: "2025-11-19T10:30:00.000Z"
+          example: '2025-11-19T10:30:00.000Z'
 
     CommandRequest:
       type: object
@@ -315,17 +315,17 @@ components:
             - screenshot
             - waitForSelector
             - evaluate
-          example: "click"
+          example: 'click'
         selector:
           type: string
           description: CSS or XPath selector (required for element-targeting commands)
-          example: "#submit-button"
+          example: '#submit-button'
         options:
           type: object
           description: Additional parameters for the command (structure depends on command type)
           additionalProperties: true
           example:
-            button: "left"
+            button: 'left'
             clickCount: 1
 
     CommandResponse:
@@ -336,12 +336,12 @@ components:
       properties:
         result:
           description: Return value from command execution (type depends on command)
-          example: "Welcome to Example Domain"
+          example: 'Welcome to Example Domain'
         executedAt:
           type: string
           format: date-time
           description: ISO 8601 timestamp when command was executed
-          example: "2025-11-19T10:30:45.123Z"
+          example: '2025-11-19T10:30:45.123Z'
 
     Error:
       type: object
@@ -361,11 +361,11 @@ components:
             - ExecutionError
             - MaxSessionsReached
             - RecordingNotFound
-          example: "SessionNotFoundError"
+          example: 'SessionNotFoundError'
         message:
           type: string
           description: Human-readable error message
-          example: "Session not found or has expired"
+          example: 'Session not found or has expired'
         details:
           type: object
           description: Additional error context (optional)
@@ -379,8 +379,8 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
           example:
-            error: "ValidationError"
-            message: "Invalid TTL value: must be between 60000 and 14400000 milliseconds"
+            error: 'ValidationError'
+            message: 'Invalid TTL value: must be between 60000 and 14400000 milliseconds'
 
     SessionNotFound:
       description: Session not found or has expired
@@ -389,8 +389,8 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
           example:
-            error: "SessionNotFoundError"
-            message: "Session not found or has expired"
+            error: 'SessionNotFoundError'
+            message: 'Session not found or has expired'
 
     SessionNotFoundOrElementNotFound:
       description: Session not found, expired, or element not found
@@ -402,10 +402,10 @@ components:
             sessionNotFound:
               summary: Session not found
               value:
-                error: "SessionNotFoundError"
-                message: "Session not found or has expired"
+                error: 'SessionNotFoundError'
+                message: 'Session not found or has expired'
             elementNotFound:
               summary: Element not found
               value:
-                error: "ElementNotFoundError"
+                error: 'ElementNotFoundError'
                 message: "Element matching selector '#missing-button' not found"

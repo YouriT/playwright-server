@@ -1,12 +1,18 @@
 import { Page } from 'patchright';
 import { getSession } from './session';
-import { resetSessionTTL } from '../utils/ttl';
 import {
   CommandNotFoundError,
   TimeoutError,
   ElementNotFoundError,
-  ExecutionError,
+  ExecutionError
 } from '../types/errors';
+import {
+  CommandRequest,
+  CommandExecutionResult,
+  SequenceExecutionResponse,
+  SessionLogEntry
+} from '../types/command';
+import { logCommandExecution, sanitizeParams } from '../utils/logger';
 
 // Command handler type
 type CommandHandler = (page: Page, params: any) => Promise<any>;
@@ -86,7 +92,7 @@ const commandRegistry: Record<string, CommandHandler> = {
   setExtraHTTPHeaders: async (page: Page, params: any) => {
     const { headers } = params;
     const headersObj: Record<string, string> = {};
-    
+
     if (Array.isArray(headers)) {
       headers.forEach((header: { name: string; value: string }) => {
         headersObj[header.name] = header.value;
@@ -94,7 +100,7 @@ const commandRegistry: Record<string, CommandHandler> = {
     } else {
       Object.assign(headersObj, headers);
     }
-    
+
     await page.setExtraHTTPHeaders(headersObj);
     return null;
   },
@@ -108,7 +114,7 @@ const commandRegistry: Record<string, CommandHandler> = {
     const { cookies } = params;
     await page.context().addCookies(cookies);
     return null;
-  },
+  }
 };
 
 export interface ExecuteCommandParams {
@@ -147,9 +153,6 @@ export async function executeCommand(params: ExecuteCommandParams): Promise<any>
     // Execute command
     const result = await handler(page, commandParams);
 
-    // Reset TTL on successful command execution
-    resetSessionTTL(session);
-
     return result;
   } catch (error: any) {
     // Map Playwright errors to custom errors
@@ -158,11 +161,148 @@ export async function executeCommand(params: ExecuteCommandParams): Promise<any>
     }
     if (
       error.message &&
-      (error.message.includes('waiting for selector') ||
-        error.message.includes('not found'))
+      (error.message.includes('waiting for selector') || error.message.includes('not found'))
     ) {
       throw new ElementNotFoundError(selector || 'unknown');
     }
     throw new ExecutionError(error.message || 'Command execution failed');
   }
+}
+
+/**
+ * Execute array of commands sequentially
+ * Halts on first failure, returns partial results
+ */
+export async function executeCommandSequence(
+  sessionId: string,
+  commands: CommandRequest[],
+  correlationId?: string,
+  userAgent?: string
+): Promise<SequenceExecutionResponse> {
+  const results: CommandExecutionResult[] = [];
+  const executedAt = new Date().toISOString();
+  let halted = false;
+  let currentUrl: string | undefined;
+
+  // Get session to access page for metadata
+  const session = getSession(sessionId);
+  const pages = session.browserContext.pages();
+  const page = pages.length > 0 ? pages[0] : null;
+
+  for (let index = 0; index < commands.length; index++) {
+    const cmd = commands[index];
+
+    // Start high-precision timer
+    const startTime = performance.now();
+
+    try {
+      // Execute command using existing executeCommand logic
+      const result = await executeCommand({
+        sessionId,
+        command: cmd.command,
+        selector: cmd.selector,
+        options: cmd.options
+      });
+
+      // Calculate duration in milliseconds (with microsecond precision)
+      const endTime = performance.now();
+      const durationMs = Math.round((endTime - startTime) * 1000) / 1000;
+
+      // Get current URL (non-confidential metadata)
+      if (page) {
+        try {
+          currentUrl = await page.url();
+        } catch {
+          currentUrl = undefined;
+        }
+      }
+
+      // Record success with timing
+      const execResult: CommandExecutionResult = {
+        index,
+        command: cmd.command,
+        status: 'success',
+        result,
+        durationMs,
+        ...(cmd.selector && { selector: cmd.selector })
+      };
+      results.push(execResult);
+
+      // Log to stdout with correlation ID and metadata
+      const logEntry: SessionLogEntry = {
+        timestamp: new Date().toISOString(),
+        correlationId: correlationId || 'unknown',
+        sessionId,
+        command: cmd.command,
+        index,
+        durationMs,
+        status: 'success',
+        ...(cmd.selector && { selector: cmd.selector }),
+        params: sanitizeParams(cmd.options, cmd.command, cmd.selector),
+        metadata: {
+          userAgent,
+          currentUrl,
+          totalCommands: commands.length
+        }
+      };
+      logCommandExecution(logEntry);
+    } catch (error: any) {
+      // Calculate duration in milliseconds (with microsecond precision)
+      const endTime = performance.now();
+      const durationMs = Math.round((endTime - startTime) * 1000) / 1000;
+
+      // Get current URL even on error
+      if (page) {
+        try {
+          currentUrl = await page.url();
+        } catch {
+          currentUrl = undefined;
+        }
+      }
+
+      // Record failure with timing
+      const execResult: CommandExecutionResult = {
+        index,
+        command: cmd.command,
+        status: 'error',
+        result: null,
+        durationMs,
+        error: error.message || 'Command execution failed',
+        ...(cmd.selector && { selector: cmd.selector })
+      };
+      results.push(execResult);
+
+      // Log to stdout with correlation ID and metadata
+      const logEntry: SessionLogEntry = {
+        timestamp: new Date().toISOString(),
+        correlationId: correlationId || 'unknown',
+        sessionId,
+        command: cmd.command,
+        index,
+        durationMs,
+        status: 'error',
+        error: error.message || 'Command execution failed',
+        ...(cmd.selector && { selector: cmd.selector }),
+        params: sanitizeParams(cmd.options, cmd.command, cmd.selector),
+        metadata: {
+          userAgent,
+          currentUrl,
+          totalCommands: commands.length
+        }
+      };
+      logCommandExecution(logEntry);
+
+      // Halt execution
+      halted = true;
+      break;
+    }
+  }
+
+  return {
+    results,
+    completedCount: results.filter((r) => r.status === 'success').length,
+    totalCount: commands.length,
+    halted,
+    executedAt
+  };
 }

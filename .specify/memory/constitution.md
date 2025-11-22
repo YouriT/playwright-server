@@ -1,21 +1,23 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: template → 1.0.0
-This is the initial ratification of the constitution.
+Version change: 1.0.0 → 1.1.0
+Amendment: Added logging and observability principle
 
-Modified principles: N/A (initial version)
+Modified principles:
+  - Added new Principle VI: Structured Logging & Observability
+  - Updated Technical Constraints to include logging requirements
+
 Added sections:
-  - Core Principles (5 principles defined)
-  - Technical Constraints
-  - Development Workflow
-  - Governance
+  - Logging standards (Pino with JSON output)
+  - Sensitive data handling requirements
+  - Correlation ID tracking for request tracing
 
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md (Constitution Check section aligns)
-  ✅ .specify/templates/spec-template.md (No test requirements enforced)
-  ✅ .specify/templates/tasks-template.md (Tests marked as optional)
-  ⚠ Command files: No updates needed (generic agent references maintained)
+  ✅ .specify/templates/plan-template.md (Already compatible)
+  ✅ .specify/templates/spec-template.md (No changes needed)
+  ✅ .specify/templates/tasks-template.md (No changes needed)
+  ⚠ Command files: No updates needed
 
 Follow-up TODOs: None
 -->
@@ -75,6 +77,25 @@ in comprehensive testing outweighs the benefits for a simple wrapper service.
 TypeScript catches many bugs at compile time, and manual testing suffices for
 HTTP endpoints.
 
+### VI. Structured Logging & Observability
+
+All production code MUST implement structured JSON logging for operational
+visibility. Logs MUST include correlation IDs for request tracing, accurate
+timing measurements, and automatic redaction of sensitive data.
+
+**Rationale**: While tests are not required, production observability is
+essential for debugging issues in deployed environments. Structured logs enable
+efficient troubleshooting and performance analysis without requiring complex
+monitoring infrastructure.
+
+**Requirements**:
+- Use Pino (or equivalent structured logger) with JSON output
+- Include correlation IDs to trace related operations
+- Measure and log operation timing with millisecond precision
+- Automatically redact sensitive data (passwords, tokens, cookies, etc.)
+- Support both production (JSON) and development (pretty-print) formats
+- Configurable log levels via environment variables
+
 ## Technical Constraints
 
 ### Language & Runtime
@@ -96,6 +117,16 @@ HTTP endpoints.
 - Environment variables for runtime configuration
 - Sensible defaults for all optional settings
 - No complex configuration file formats (JSON or .env only)
+- Logging configuration MUST support `LOG_LEVEL` environment variable
+
+### Logging Standards
+
+- **Library**: Pino (structured JSON logging)
+- **Output**: JSON to stdout (production), pretty-print (development)
+- **Correlation IDs**: UUID v4 for all HTTP requests, shared across operations
+- **Timing**: Use `performance.now()` for microsecond-precision measurements
+- **Sensitive Data**: Automatic redaction of passwords, tokens, cookies, API keys
+- **Context Awareness**: Detect and redact sensitive inputs based on command context (e.g., typing into password fields)
 
 ### Security Considerations
 
@@ -164,9 +195,10 @@ doubt, refer back to Principle I (Simplicity First).
 ### Template Synchronization
 
 When this constitution is amended:
+
 - Review `.specify/templates/plan-template.md` Constitution Check section
 - Review `.specify/templates/spec-template.md` for requirement alignment
 - Review `.specify/templates/tasks-template.md` for task type categorization
 - Update any command files if agent-specific references need correction
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-19 | **Last Amended**: 2025-11-19
+**Version**: 1.1.0 | **Ratified**: 2025-11-19 | **Last Amended**: 2025-11-22

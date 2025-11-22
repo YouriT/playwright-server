@@ -1,0 +1,5 @@
+.vercel
+.next
+pnpm-lock.yaml
+src/i18n/*.json
+src/**/*.mdx
