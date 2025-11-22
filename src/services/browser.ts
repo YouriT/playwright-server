@@ -5,12 +5,10 @@ let browserInstance: Browser | null = null;
 
 export async function getBrowser(): Promise<Browser> {
   if (!browserInstance || !browserInstance.isConnected()) {
-    const headless = process.env.HEADLESS !== 'false';
-
     logger.info(
       {
         type: 'browser_launch',
-        mode: headless ? 'headless' : 'headed',
+        mode: 'headed',
         browser: 'chromium'
       },
       'Launching browser instance'

@@ -35,7 +35,6 @@ Create `.env` file for custom settings:
 - `MAX_CONCURRENT_SESSIONS` - Max concurrent sessions (default: 10)
 - `RECORDINGS_DIR` - Recording directory (default: ./recordings)
 - `LOG_LEVEL` - info, debug, error (default: info)
-- `HEADLESS` - Run browser in headless mode (default: true)
 - `HTTP_PROXY` - Global HTTP/HTTPS proxy (optional)
 - `HTTPS_PROXY` - Global HTTPS proxy override (optional)
 - `NO_PROXY` - Comma-separated list of hosts to bypass proxy (optional)

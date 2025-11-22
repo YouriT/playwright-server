@@ -105,11 +105,88 @@ export async function createSession(options: CreateSessionOptions): Promise<Sess
   );
 
   // Launch persistent browser context with dedicated user data directory
+  // Docker + Xvfb: Use SwiftShader for WebGL software rendering
   const browserContext = await chromium.launchPersistentContext(userDataDir, {
     channel: 'chrome',
     headless: false,
+    args: [
+      // Disable automation detection
+      '--disable-blink-features=AutomationControlled',
+      // Disable crash reporting (Chrome 128+ requires crashpad directories or this flag)
+      '--disable-breakpad',
+      '--no-crash-upload',
+      '--disable-crash-reporter',
+      '--no-crashpad',
+      // Disable shared memory usage (required in Docker)
+      '--disable-dev-shm-usage',
+      // GPU and rendering - use SwiftShader for software WebGL in Xvfb
+      '--enable-webgl',
+      '--use-gl=angle',
+      '--use-angle=swiftshader',
+      '--enable-accelerated-2d-canvas',
+      // Security (required for Docker without privileged mode)
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      // Stability improvements for headless/Xvfb environments
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      // Prevent profile warnings
+      '--ignore-profile-directory-if-not-exists'
+    ],
+    env: {
+      // Pass DISPLAY from parent process (set by Xvfb in docker-entrypoint.sh)
+      DISPLAY: process.env.DISPLAY || ':99',
+      // Set XDG directories to user data dir to avoid permission issues
+      XDG_CONFIG_HOME: userDataDir,
+      XDG_CACHE_HOME: userDataDir
+    },
     ...contextOptions
   });
+
+  // Inject WebGL spoofing script to hide SwiftShader
+  await browserContext.addInitScript(`
+    (() => {
+      // Override WebGL parameter queries to report realistic GPU info
+      const getParameterProxyHandler = {
+        apply: function(target, thisArg, argumentsList) {
+          const parameter = argumentsList[0];
+          const debugInfo = thisArg.getExtension('WEBGL_debug_renderer_info');
+
+          if (debugInfo) {
+            // Spoof vendor
+            if (parameter === debugInfo.UNMASKED_VENDOR_WEBGL) {
+              return 'Intel Inc.';
+            }
+            // Spoof renderer - use common integrated GPU
+            if (parameter === debugInfo.UNMASKED_RENDERER_WEBGL) {
+              return 'Intel(R) UHD Graphics 630';
+            }
+          }
+
+          // Call original for all other parameters
+          return Reflect.apply(target, thisArg, argumentsList);
+        }
+      };
+
+      // Proxy WebGL contexts
+      const addProxyToContext = (ctx) => {
+        if (!ctx) return ctx;
+        ctx.getParameter = new Proxy(ctx.getParameter, getParameterProxyHandler);
+        return ctx;
+      };
+
+      // Override getContext to inject proxies
+      const originalGetContext = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function(contextType, ...args) {
+        const context = originalGetContext.apply(this, [contextType, ...args]);
+        if (contextType === 'webgl' || contextType === 'webgl2' || contextType === 'webgl-experimental') {
+          return addProxyToContext(context);
+        }
+        return context;
+      };
+    })();
+  `);
 
   // Create session data
   const sessionData: SessionData = {

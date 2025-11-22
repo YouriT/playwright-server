@@ -76,6 +76,11 @@ const commandRegistry: Record<string, CommandHandler> = {
     return buffer.toString('base64');
   },
 
+  content: async (page: Page, _params: any) => {
+    const html = await page.content();
+    return html;
+  },
+
   // Page manipulation commands
   waitForSelector: async (page: Page, params: any) => {
     const { selector, timeout } = params;
