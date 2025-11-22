@@ -36,4 +36,4 @@ All validation items passed. The specification is ready for `/speckit.clarify` o
 **Clarifications resolved**:
 
 - Q1: SOCKS proxy support → Answer: Support HTTP/HTTPS + SOCKS5
-- Q2: Proxy bypass rules → Answer: No bypass rules - all traffic through proxy
+- Q2: Proxy bypass rules → Answer: Support bypass rules via NO_PROXY env var and bypass field

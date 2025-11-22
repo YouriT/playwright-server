@@ -1,17 +1,16 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.1.0
-Amendment: Added logging and observability principle
+Version change: 1.1.0 → 1.2.0
+Amendment: Added Patchright browser requirement
 
 Modified principles:
-  - Added new Principle VI: Structured Logging & Observability
-  - Updated Technical Constraints to include logging requirements
+  - Updated Principle IV: Thin Playwright Wrapper to include Patchright requirement
+  - Added Technical Constraints for browser configuration
 
 Added sections:
-  - Logging standards (Pino with JSON output)
-  - Sensitive data handling requirements
-  - Correlation ID tracking for request tracing
+  - Patchright browser channel requirement (Chrome only)
+  - Rationale for Chrome enforcement
 
 Templates requiring updates:
   ✅ .specify/templates/plan-template.md (Already compatible)
@@ -55,15 +54,23 @@ where practical.
 **Rationale**: HTTP is universal, debuggable with curl/Postman, and requires no
 specialized client libraries. This maximizes accessibility and simplicity.
 
-### IV. Thin Playwright Wrapper
+### IV. Thin Playwright Wrapper (via Patchright)
 
-This server MUST remain a thin wrapper over Playwright's native API. Do not
-reinvent Playwright abstractions or create "improved" versions of Playwright
-concepts. Map HTTP requests to Playwright calls as directly as possible.
+This server MUST remain a thin wrapper over Playwright's native API via the
+Patchright library. Do not reinvent Playwright abstractions or create "improved"
+versions of Playwright concepts. Map HTTP requests to Playwright calls as
+directly as possible.
 
-**Rationale**: Maintaining parity with Playwright's capabilities and avoiding
-duplication of effort. Users should be able to reference Playwright docs
-directly when using this server.
+**Browser Requirement**: MUST use Patchright with Chrome browser only
+(`channel: 'chrome'`). This is a hard requirement for Patchright's stealth
+capabilities and MUST NOT be made configurable.
+
+**Rationale**:
+
+- Maintaining parity with Playwright's capabilities and avoiding duplication of effort
+- Patchright requires Chrome for optimal stealth mode and bot detection evasion
+- Users should be able to reference Playwright docs directly when using this server
+- Chrome-only requirement is a Patchright best practice per official documentation
 
 ### V. No Testing Requirements (NON-NEGOTIABLE)
 
@@ -104,7 +111,15 @@ monitoring infrastructure.
 - **Language**: TypeScript (strict mode enabled)
 - **Runtime**: Node.js (latest LTS recommended)
 - **Framework**: Minimal web framework (e.g., Express, Fastify, or native http)
-- **Dependencies**: Playwright + web framework + minimal utilities only
+- **Dependencies**: Patchright + web framework + minimal utilities only
+- **Browser**: Chrome (required by Patchright, must be installed on system)
+
+### Browser Configuration
+
+- **Library**: Patchright (enhanced Playwright fork)
+- **Channel**: `'chrome'` (hardcoded, NON-NEGOTIABLE)
+- **Rationale**: Patchright's stealth mode requires Chrome; other browsers not supported
+- **Documentation**: Chrome installation requirement MUST be documented in README
 
 ### API Design
 
@@ -119,6 +134,7 @@ monitoring infrastructure.
 - Sensible defaults for all optional settings
 - No complex configuration file formats (JSON or .env only)
 - Logging configuration MUST support `LOG_LEVEL` environment variable
+- Browser channel is NOT configurable (always Chrome)
 
 ### Logging Standards
 
@@ -202,4 +218,4 @@ When this constitution is amended:
 - Review `.specify/templates/tasks-template.md` for task type categorization
 - Update any command files if agent-specific references need correction
 
-**Version**: 1.1.0 | **Ratified**: 2025-11-19 | **Last Amended**: 2025-11-22
+**Version**: 1.2.0 | **Ratified**: 2025-11-19 | **Last Amended**: 2025-11-22

@@ -136,7 +136,6 @@ As an API consumer using commercial proxy services (like Bright Data, Smartproxy
 - Built-in proxy health checks or failover mechanisms
 - Proxy performance monitoring or metrics collection
 - Custom proxy authentication protocols beyond HTTP Basic/Digest
-- Per-domain or per-URL proxy routing rules (proxy bypass functionality)
 - Proxy configuration via API endpoints (only env vars and session creation supported)
 - Modification of proxy configuration for active sessions (requires session recreation)
 - Built-in proxy providers or proxy service integrations

@@ -1,6 +1,7 @@
 import pino from 'pino';
 import os from 'os';
 import { SessionLogEntry } from '../types/command';
+import { maskProxyServerUrl } from './proxy';
 
 // ECS log level to numeric severity mapping (RFC 5424 syslog)
 const LOG_LEVEL_SEVERITY: Record<string, number> = {
@@ -37,30 +38,6 @@ const PROXY_REDACTION_PATHS = [
   'params.proxy.password',
   'params.proxy.server'
 ];
-
-/**
- * Mask credentials in proxy server URL for safe logging
- */
-function maskProxyServerUrl(url: string): string {
-  if (!url || typeof url !== 'string') return '[REDACTED]';
-
-  try {
-    const parsed = new URL(url);
-    if (parsed.username || parsed.password) {
-      parsed.username = '[USER]';
-      parsed.password = '';
-      return parsed.toString();
-    }
-    return url;
-  } catch {
-    // Pattern: http://username:password@host:port
-    const credsPattern = /^([a-z]+:\/\/)([^:]+:[^@]+@)(.+)$/i;
-    if (credsPattern.test(url)) {
-      return url.replace(credsPattern, '$1[USER]:[PASS]@$3');
-    }
-    return url;
-  }
-}
 
 /**
  * Custom censor function for proxy credentials

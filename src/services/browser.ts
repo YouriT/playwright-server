@@ -6,15 +6,18 @@ let browserInstance: Browser | null = null;
 export async function getBrowser(): Promise<Browser> {
   if (!browserInstance || !browserInstance.isConnected()) {
     const headless = process.env.HEADLESS !== 'false';
+
     logger.info(
       {
         type: 'browser_launch',
-        mode: headless ? 'headless' : 'headed'
+        mode: headless ? 'headless' : 'headed',
+        channel: 'chrome'
       },
       'Launching browser instance'
     );
+
     browserInstance = await chromium.launch({
-      channel: 'chrome',
+      channel: 'chrome', // Required by Patchright for stealth mode
       headless
     });
   }

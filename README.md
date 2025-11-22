@@ -35,9 +35,12 @@ Create `.env` file for custom settings:
 - `MAX_CONCURRENT_SESSIONS` - Max concurrent sessions (default: 10)
 - `RECORDINGS_DIR` - Recording directory (default: ./recordings)
 - `LOG_LEVEL` - info, debug, error (default: info)
+- `HEADLESS` - Run browser in headless mode (default: true)
 - `HTTP_PROXY` - Global HTTP/HTTPS proxy (optional)
 - `HTTPS_PROXY` - Global HTTPS proxy override (optional)
 - `NO_PROXY` - Comma-separated list of hosts to bypass proxy (optional)
+
+**Note:** This server uses Patchright with Chrome browser for enhanced stealth capabilities. Chrome must be installed on the system.
 
 ## API Usage
 
@@ -133,7 +136,7 @@ curl -X POST http://localhost:3000/sessions \
   -d '{
     "ttl": 1800000,
     "proxy": {
-      "server": "proxy.example.com:8080",
+      "server": "http://proxy.example.com:8080",
       "username": "user",
       "password": "pass"
     }
