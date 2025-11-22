@@ -53,6 +53,10 @@ RUN groupadd -r nodejs && useradd -r -g nodejs nodejs && \
     cp -r /root/.cache/ms-playwright /home/nodejs/.cache/ && \
     chown -R nodejs:nodejs /home/nodejs/.cache
 
+# Create directories for volumes
+RUN mkdir -p /app/recordings /app/user-data && \
+    chown -R nodejs:nodejs /app/recordings /app/user-data
+
 USER nodejs
 
 # Expose the port the app runs on
@@ -60,6 +64,9 @@ EXPOSE 3000
 
 # Set environment to production
 ENV NODE_ENV=production
+
+# Define volumes for persistent data
+VOLUME ["/app/recordings", "/app/user-data"]
 
 # Run the application
 CMD ["node", "dist/server.js"]
